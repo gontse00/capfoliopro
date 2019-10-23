@@ -133,6 +133,18 @@ html.Div([
                 html.Div(id="selected-portfolio"),
                 dcc.Tabs(id="backtest-tabs", value="returns",parent_className="custom-tabs", colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"},
                 	children=[
+                	    dcc.Tab(label="SUMMARY",value="summary", selected_className="custom-tab--selected",
+                	    	children=[
+                	    	    html.Div(id="annual-return"),
+                	    	    html.Div(id="annual-volatility"),
+                	    	    html.Div(id="calmar-ratio"),
+                	    	    html.Div(id="omega-ratio"),
+                	    	    html.Div(id="sharpe-ratio"),
+                	    	    html.Div(id="sortino-ratio"),
+                	    	    html.Div(id="downside-risk"),
+                	    	    html.Div(id="stability"),
+                	    	    html.Div(id="tail-ratio"),
+                	    	    html.Div(id="cagr")], className="custom-tab"),
                 	    dcc.Tab(label="RETURNS", value="returns", selected_className="custom-tab--selected",
                 		    children=[
                 		        html.Div([
@@ -479,6 +491,56 @@ def positions(n_clicks, backtest_results_df):
 	    positions_df.index = pd.to_datetime(positions["index"])
 	    positions_month = positions_df.resample('1M')
 	    layout_figure = copy.deepcopy(layout)
+
+#summary statistics
+@app.callback([Output("annual-return","children"),
+	Output("cagr","children"),
+	Output("annual-volatility","children"),
+	Output("calmar-ratio","children"),
+	Output("omega-ratio","children"),
+	Output("sharpe-ratio","children"),
+	Output("sortino-ratio","children"),
+	Output("downside-risk","children"),
+	Output("stability","children"),
+	Output("tail-ratio","children")],
+	[Input("run-backtest", "n_clicks"),
+	Input("backtest-results", "children")])
+def summary_stats(n_clicks, backtest_results_df):
+	if n_clicks==0:
+		raise PreventUpdate
+	if n_clicks==1:
+		data = json.loads(backtest_results_df)
+		returns_dict = eval(data["returns"])
+		returns = pd.DataFrame(returns_dict["data"])
+		returns.columns = ["returns"]
+		returns.index = pd.to_datetime(returns_dict["index"])
+		
+		annual_return = ep.annual_return(returns)
+		annual_volatility = ep.annual_volatility(returns)
+		calmar_ratio = ep.calmar_ratio(returns["returns"])
+		omega_ratio = ep.omega_ratio(returns["returns"])
+		sharpe_ratio = ep.sharpe_ratio(returns["returns"])
+		sortino_ratio = ep.sortino_ratio(returns["returns"])
+		downside_risk = ep.downside_risk(returns["returns"])
+		#information_ratio = ep.information_ratio(returns["returns"])
+		#alpha_beta = ep.alpha_beta(returns["returns"])
+		#alpha = ep.alpha(returns["returns"])
+		#beta = ep.beta(rreturns["returns"])
+		stability = ep.stability_of_timeseries(returns["returns"])
+		tail_ratio = ep.tail_ratio(returns["returns"])
+		cagr = ep.cagr(returns["returns"])
+	return [annual_return, 
+		    cagr,
+		    annual_volatility,
+		    calmar_ratio,
+            omega_ratio,
+            sharpe_ratio,
+		    sortino_ratio,
+		    downside_risk,
+		    stability,
+		    tail_ratio]
+
+
 	    	
 """
 @app.callback(
