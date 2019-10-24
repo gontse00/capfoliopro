@@ -25,6 +25,8 @@ stock_data.index = stock_data["symbol"]
 dropdown_options = [{'label':stock_data['name'][i], 'value':stock_data['symbol'][i]} for i in range(0,len(stock_data))]
 stock_data.index = stock_data["symbol"]
 stock_data.drop("symbol", axis=1)
+benchmark = yf.Ticker("^SPX")
+benchmark_df = benchmark.history("5y")
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css',dbc.themes.BOOTSTRAP]
 
@@ -99,14 +101,22 @@ html.Div([
                 		            html.Div([
 		        	                    dcc.Tabs(id="time-tabs", mobile_breakpoint=0, value="1-month-tab",parent_className="custom-tabs",
 		        		                    children=[
-		        		                        dcc.Tab(label="1 month", value="1-month-tab", className="custom-tab", 
+		        		                        dcc.Tab(label="1D", value="1-day-tab", className="custom-tab", 
 		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="6 months", value="6-months-tab", className="custom-tab", 
+		        		                        dcc.Tab(label="5D", value="5-days-tab", className="custom-tab", 
 		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="1 year", value="1-year-tab", className="custom-tab", 
+		        		                        dcc.Tab(label="1M", value="1-month-tab", className="custom-tab", 
 		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="5 years", value="5-years-tab", className="custom-tab", 
-		        		          	                selected_className="custom-tab--selected")]
+		        		                        dcc.Tab(label="6M", value="6-months-tab", className="custom-tab", 
+		        		          	                selected_className="custom-tab--selected"),
+		        		                        dcc.Tab(label="1Y", value="1-year-tab", className="custom-tab", 
+		        		          	                selected_className="custom-tab--selected"),
+		        		                        dcc.Tab(label="YTD", value="year-to-date", className="custom-tab", 
+		        		          	                selected_className="custom-tab--selected"),
+		        		                        dcc.Tab(label="5Y", value="5-years-tab", className="custom-tab", 
+		        		          	                selected_className="custom-tab--selected"),
+		        		                        dcc.Tab(label="max", value="max", className="custom-tab", 
+		        		          	                selected_className="custom-tab--selected"),]
 		        		                    , colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"}),            
 		                                    html.Div(id="price-history-figure", style={"marging-bottom":"25px"})
 		                                ]),
@@ -522,6 +532,10 @@ def summary_stats(n_clicks, backtest_results_df):
 		sharpe_ratio = ep.sharpe_ratio(returns["returns"])
 		sortino_ratio = ep.sortino_ratio(returns["returns"])
 		downside_risk = ep.downside_risk(returns["returns"])
+		max_dd = ep.max_dradown(returns["returns"])
+		risk_estimates = ep.gpd_risk_estimates(returns["returns"])
+		var = ep.value_a_risk(returns["returns"])
+		CVar = ep.conditional_value_at_risk(returns["returns"])
 		#information_ratio = ep.information_ratio(returns["returns"])
 		#alpha_beta = ep.alpha_beta(returns["returns"])
 		#alpha = ep.alpha(returns["returns"])
