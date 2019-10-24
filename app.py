@@ -67,7 +67,7 @@ html.Div([
 			html.H5("An Event Driven Backtester",style = {"marging-top":"0px", "text-align":"center"})],
 			    id = "title",style = {"marging-bottom":"25px"})]),
 	######start tabs here
-	dcc.Tabs(id="page-tabs",value="EXPLORE", parent_className="custom-tabs", colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"},
+	dcc.Tabs(id="page-tabs",value="EXPLORE", mobile_breakpoint=0,parent_className="custom-tabs", colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"},
 		children=[
 	    dcc.Tab(label="EXPLORE", value="EXPLORE", className="custom-tab", selected_className="custom-tab--selected",
 		    children=[
@@ -91,12 +91,25 @@ html.Div([
 		                    ])
 		                ]),
 
-                    dcc.Tabs(id="tabs", value="overview", parent_className="custom-tabs",
+                    dcc.Tabs(id="tabs",mobile_breakpoint=0, value="overview", parent_className="custom-tabs",
         	            children=[
                             dcc.Tab(label="Overview", value="overview", 
                 	            children=[
                 		            html.Div([html.Div(id="previous-close")]),
-                		            html.Div([html.Div(id="price-history-figure")]),
+                		            html.Div([
+		        	                    dcc.Tabs(id="time-tabs", mobile_breakpoint=0, value="1-month-tab",parent_className="custom-tabs",
+		        		                    children=[
+		        		                        dcc.Tab(label="1 month", value="1-month-tab", className="custom-tab", 
+		        		          	                selected_className="custom-tab--selected"),
+		        		                        dcc.Tab(label="6 months", value="6-months-tab", className="custom-tab", 
+		        		          	                selected_className="custom-tab--selected"),
+		        		                        dcc.Tab(label="1 year", value="1-year-tab", className="custom-tab", 
+		        		          	                selected_className="custom-tab--selected"),
+		        		                        dcc.Tab(label="5 years", value="5-years-tab", className="custom-tab", 
+		        		          	                selected_className="custom-tab--selected")]
+		        		                    , colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"}),            
+		                                    html.Div(id="price-history-figure", style={"marging-bottom":"25px"})
+		                                ]),
                 
 		                            html.Div(id="company-stats")], className="custom-tab", selected_className="custom-tab--selected"),
 
@@ -118,7 +131,7 @@ html.Div([
                 	            "name":"Name", "id":"name",
                 	            "name":"Sector", "id":"sector"}],data =[{}])])],style={"display":"none"}),
                 html.Div(id="selected-portfolio"),
-                dcc.Tabs(id="backtest-tabs", value="returns",parent_className="custom-tabs", colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"},
+                dcc.Tabs(id="backtest-tabs", mobile_breakpoint=0, value="returns",parent_className="custom-tabs", colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"},
                 	children=[
                 	    dcc.Tab(label="SUMMARY",value="summary", selected_className="custom-tab--selected",
                 	    	children=[
@@ -189,8 +202,9 @@ def get_company(ticker):
 #@app.callback()
 @app.callback(
 	Output("price-history-figure","children"),
-	[Input("ticker-info", "children")])
-def get_graph(ticker_info):
+	[Input("ticker-info", "children"),
+	 Input("time-tabs","value")])
+def get_graph(ticker_info,tab):
 	#data = yf.Ticker(ticker)
 	#df = data.history(period="5y")["Close"]
 	price = json.loads(ticker_info[0])
@@ -202,43 +216,42 @@ def get_graph(ticker_info):
 	d_data = price_data[-1:][0]-price_data[1]
 
 	m_figure = go.Figure(layout=go_layout)
-	m_figure.add_trace(go.Scatter(x=price_index,y=price_data,mode='lines',line=dict(color="green")))
-	m_figure.update_layout(
-		xaxis=go.layout.XAxis(
-			rangeselector=dict(
-				buttons=list([
-					dict(count=1,
-					     label="1m",
-					     step="month",
-					     stepmode="backward"),
-					dict(count=6,
-					     label="6m",
-					     step="month",
-					     stepmode="backward"),
-					dict(count=1,
-					     label="YTD",
-					     step="year",
-					     stepmode="todate"),
-					dict(count=1,
-					     label="1y",
-					     step="year",
-					     stepmode="backward"),
-					dict(count=5,
-					     label="5y",
-					     step="year",
-					     stepmode="backward")
-					])
-				),
-			rangeslider=dict(visible=False
-				),
-			type="date"
-			),
-		yaxis=go.layout.YAxis(
-			anchor="x",
-			autorange=True)
-		)
-	figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
-	return figure
+
+	if tab=="1-month-tab" and a_data>0:
+		m_figure.add_trace(go.Scatter(x=price_index[-30:],y=price_data[-30:],mode='lines',line=dict(color="green")))
+		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
+		return figure
+	elif tab=="1-month-tab" and a_data<0:
+		m_figure.add_trace(go.Scatter(x=price_index[-30:],y=price_data[-30:],mode='lines',line=dict(color="red")))
+		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
+		return figure
+
+	if tab=="6-months-tab" and b_data>0:
+		m_figure.add_trace(go.Scatter(x=price_index[-130:],y=price_data[-130:],mode='lines',line=dict(color="green")))
+		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
+		return figure
+	elif tab=="6-months-tab" and b_data<0:
+		m_figure.add_trace(go.Scatter(x=price_index[-130:],y=price_data[-130:],mode='lines',line=dict(color="red")))
+		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
+		return figure
+	
+	if tab=="1-year-tab" and c_data>0:
+	    m_figure.add_trace(go.Scatter(x=price_index[-260:],y=price_data[-260:],mode='lines',line=dict(color="green")))
+	    figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
+	    return figure
+	elif tab=="1-year-tab" and c_data<0:
+		m_figure.add_trace(go.Scatter(x=price_index[-260:],y=price_data[-260:],mode='lines',line=dict(color="red")))
+		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
+		return figure
+
+	if tab=="5-years-tab" and d_data>0:
+		m_figure.add_trace(go.Scatter(x=price_index,y=price_data,mode='lines',line=dict(color="green")))
+		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
+		return figure
+	elif tab=="5-years-tab" and d_data<0:
+		m_figure.add_trace(go.Scatter(x=price_index,y=price_data,mode='lines',line=dict(color="red")))
+		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
+		return figure
 
 @app.callback(
 	Output("previous-close", "children"),
