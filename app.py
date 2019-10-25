@@ -11,6 +11,7 @@ import os
 import copy
 from datetime import datetime
 import plotly.graph_objects as go
+import plotly.figure_factory as ff
 from collections import OrderedDict
 import pytz
 from olmar import backtest_olmar
@@ -19,14 +20,16 @@ import json
 import empyrical as ep
 import dash_bootstrap_components as dbc
 import yfinance as yf
+import dash_daq as daq
 
 stock_data = pd.read_csv(os.path.join(os.getcwd(),'data/new_stock_data.csv'))
 stock_data.index = stock_data["symbol"]
 dropdown_options = [{'label':stock_data['name'][i], 'value':stock_data['symbol'][i]} for i in range(0,len(stock_data))]
 stock_data.index = stock_data["symbol"]
 stock_data.drop("symbol", axis=1)
-benchmark = yf.Ticker("^SPX")
-benchmark_df = benchmark.history("5y")
+benchmark = yf.Ticker("^GSPC")
+benchmark_df = benchmark.history(period="5y")["Close"]
+factor_returns = ep.simple_returns(benchmark_df)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css',dbc.themes.BOOTSTRAP]
 
@@ -491,7 +494,12 @@ def positions(n_clicks, backtest_results_df):
 	if n_clicks == 1:
 	    data = json.loads(backtest_results_df)
 
+	    returns = eval(data["returns"])
 	    positions = eval(data["positions"])
+	    transactions = eval(data["transactions"])
+	    print(returns)
+	    print(positins)
+	    print(transactions)
 	    column_names = []
 	    for i in range(0,len(positions["columns"])-1):
 	        column_names.append(positions["columns"][i]["symbol"])
@@ -501,6 +509,9 @@ def positions(n_clicks, backtest_results_df):
 	    positions_df.index = pd.to_datetime(positions["index"])
 	    positions_month = positions_df.resample('1M')
 	    layout_figure = copy.deepcopy(layout)
+
+	    positions_alloc = pf.pos.get_percent_alloc(positions_df)
+	    print(positions_alloc)
 
 #summary statistics
 @app.callback([Output("annual-return","children"),
@@ -516,6 +527,7 @@ def positions(n_clicks, backtest_results_df):
 	[Input("run-backtest", "n_clicks"),
 	Input("backtest-results", "children")])
 def summary_stats(n_clicks, backtest_results_df):
+	factor_returns = benchmark_df
 	if n_clicks==0:
 		raise PreventUpdate
 	if n_clicks==1:
@@ -525,24 +537,88 @@ def summary_stats(n_clicks, backtest_results_df):
 		returns.columns = ["returns"]
 		returns.index = pd.to_datetime(returns_dict["index"])
 		
-		annual_return = ep.annual_return(returns)
-		annual_volatility = ep.annual_volatility(returns)
-		calmar_ratio = ep.calmar_ratio(returns["returns"])
-		omega_ratio = ep.omega_ratio(returns["returns"])
-		sharpe_ratio = ep.sharpe_ratio(returns["returns"])
-		sortino_ratio = ep.sortino_ratio(returns["returns"])
-		downside_risk = ep.downside_risk(returns["returns"])
-		max_dd = ep.max_dradown(returns["returns"])
-		risk_estimates = ep.gpd_risk_estimates(returns["returns"])
-		var = ep.value_a_risk(returns["returns"])
-		CVar = ep.conditional_value_at_risk(returns["returns"])
+		annual_return = html.Div([daq.LEDDisplay(
+			    label="Annual return",
+			    value = np.round(ep.annual_volatility(returns),3),
+			    size = 10)], 
+			className="mini_container")
+		annual_volatility = html.Div([
+			    html.P("Annual Volatility"),
+			    html.H6(np.round(ep.annual_volatility(returns),3))], 
+			className="mini_container")
+		calmar_ratio = html.Div([
+			    html.P("Calmar Ratio"),
+			    html.H6(np.round(ep.calmar_ratio(returns["returns"]),3))], 
+			className="mini_container")
+		omega_ratio = html.Div([
+			    html.P("Omega Ratio"),
+			    html.H6(np.round(ep.omega_ratio(returns["returns"]),3))], 
+			className="mini_container")
+		sharpe_ratio = html.Div([
+			    html.P("Sharpe Ratio"),
+			    html.H6(np.round(ep.sharpe_ratio(returns["returns"]),3))], 
+			className="mini_container")
+		sortino_ratio = html.Div([
+			    html.P("Sortino Ratio"),
+			    html.H6(np.round(ep.sortino_ratio(returns["returns"]),3))], 
+			className="mini_container")
+		downside_risk = html.Div([
+			    html.P("Downside Risk"),
+			    html.H6(np.round(ep.downside_risk(returns["returns"]),3))], 
+			className="mini_container")
+		max_dd = html.Div([
+			    html.P("Maximun Drawdown"),
+			    html.H6(np.round(ep.max_drawdown(returns["returns"])),3)], 
+			className="mini_container")
+		#risk_estimates = html.Div(html.H6(ep.gpd_risk_estimates(returns["returns"])), className="mini_container")
+		var = html.Div([
+			    html.P("Value at Risk"),
+			    html.H6(np.round(ep.value_at_risk(returns["returns"]),3))], 
+			className="mini_container")
+		CVar = html.Div([
+			    html.P("Conditional Value at Risk"),
+			    html.H6(np.round(ep.conditional_value_at_risk(returns["returns"]),3))], 
+			className="mini_container")
 		#information_ratio = ep.information_ratio(returns["returns"])
-		#alpha_beta = ep.alpha_beta(returns["returns"])
-		#alpha = ep.alpha(returns["returns"])
-		#beta = ep.beta(rreturns["returns"])
-		stability = ep.stability_of_timeseries(returns["returns"])
-		tail_ratio = ep.tail_ratio(returns["returns"])
-		cagr = ep.cagr(returns["returns"])
+		alpha_, beta_ = ep.alpha_beta(returns["returns"], factor_returns)
+		alpha = html.Div([
+			    html.P("Alpha"),
+			    html.H6(np.round(alpha_,3))], 
+			className="mini_container")
+		beta = html.Div([
+			    html.P("Beta"),
+			    html.H6(np.round(beta_,3))], 
+			className="mini_container")
+
+		capture_ = ep.capture(returns["returns"], factor_returns)
+		capture = html.Div([
+			    html.P("Capture"),
+			    html.H6(np.round(capture_,3))], 
+			className="mini_container")
+		up_capture_ = ep.up_capture(returns["returns"], factor_returns)
+		up_capture = html.Div([
+			    html.P("Up capture"),
+			    html.H6(np.round(up_capture_,3))], 
+			className="mini_container")
+		down_capture_ = ep.down_capture(returns["returns"], factor_returns)
+		up_down_capture = ep.up_down_capture(returns["returns"], factor_returns)
+		cum_returns_final = ep.cum_returns_final(returns["returns"])
+		max
+		stability = html.Div([
+			    html.P("Stability"),
+			    html.H6(np.round(ep.stability_of_timeseries(returns["returns"]),3))], 
+			className="mini_container")
+		tail_ratio = html.Div([
+			    html.P("Tail Ratio"),
+			    html.H6(np.round(ep.tail_ratio(returns["returns"]),3))], 
+			className="mini_container")
+		cagr = html.Div([
+			    html.P("Compound Annual Growth Rate"),
+			    html.H6(np.round(ep.cagr(returns["returns"]),3))], 
+			className="mini_container")
+
+		excess_sharpe = ep.excess_sharpe(returns["returns"], factor_returns)
+
 	return [annual_return, 
 		    cagr,
 		    annual_volatility,
@@ -553,8 +629,6 @@ def summary_stats(n_clicks, backtest_results_df):
 		    downside_risk,
 		    stability,
 		    tail_ratio]
-
-
 	    	
 """
 @app.callback(
@@ -562,7 +636,7 @@ def summary_stats(n_clicks, backtest_results_df):
 	[Input("run-backtest", "n_clicks"),
 	Input("backtest-results", "children")])
 def transactions(n_clicks, backtest_results_df):
-	pass"""
+"""	
 
 if __name__=="__main__":
     app.run_server(debug=True)
