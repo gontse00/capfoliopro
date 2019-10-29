@@ -84,25 +84,28 @@ html.Div([
                 html.Div(id="ticker-info", style={"display":"none"}),  #2 
 
                 html.Div([
-		            html.Div([
-		                html.Div([
-		                    html.Div([
-		                        html.Div([
-		        	                html.H5(id="name", style={"color":"black"}),
-		        	                html.H6(id="sector-industry", style={"marging-top":"0rem"})], className="ten columns"),
-		        	            html.Div(html.Button('+ portfolio',id='add-ticker-but',n_clicks=0), style={"float":"right"}, 
-		        		            className="two columns dcc_control")], 
-		        	        style={"marging-top":"25px"} ,className="row"),
-		                    ])
-		                ]),
+		            
 
                     dcc.Tabs(id="tabs",mobile_breakpoint=0, value="overview", parent_className="custom-tabs",
         	            children=[
                             dcc.Tab(label="Overview", value="overview", 
                 	            children=[
-                		            html.Div([html.Div(id="previous-close")]),
-                		            html.Div([
-		        	                    dcc.Tabs(id="time-tabs", mobile_breakpoint=0, value="1-month-tab",parent_className="custom-tabs",
+                		                html.Div([], ),
+                		                html.Div([
+                		            	    html.Div([
+		                                        html.Div([
+		                                            html.Div([
+		                                                html.Div([
+		        	                                        html.H5(id="name", style={"color":"black"}),
+		        	                                        html.H6(id="sector-industry", style={"marging-top":"0rem"})], className="ten columns"),
+		        	                                    html.Div(html.Button('+ portfolio',id='add-ticker-but',n_clicks=0), style={"float":"right"}, 
+		        		                            className="two columns dcc_control")], 
+		        	                            style={"marging-top":"25px"} ,className="row"),
+		                                        ])
+		                                     ]),
+                		            	html.Div([html.Div(id="previous-close")]),
+                		            	
+		        	                    dcc.Tabs(id="time-tabs", mobile_breakpoint=0, value="1-year-tab",parent_className="custom-tabs",
 		        		                    children=[
 		        		                        dcc.Tab(label="1D", value="1-day-tab", className="custom-tab", 
 		        		          	                selected_className="custom-tab--selected"),
@@ -120,11 +123,12 @@ html.Div([
 		        		          	                selected_className="custom-tab--selected"),
 		        		                        dcc.Tab(label="max", value="max", className="custom-tab", 
 		        		          	                selected_className="custom-tab--selected"),]
-		        		                    , colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"}),            
-		                                    html.Div(id="price-history-figure", style={"marging-bottom":"25px"})
-		                                ]),
-                
-		                            html.Div(id="company-stats")], className="custom-tab", selected_className="custom-tab--selected"),
+		        		                    , colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"}),
+
+
+		                                    html.Div(id="price-history-figure")
+		                                ], className="pretty_container"),]
+		                        , className="custom-tab", selected_className="custom-tab--selected"),
 
                 	        dcc.Tab(label="News", value="news",
                 		        children=[],className="custom-tab", selected_className="custom-tab--selected"),
@@ -147,30 +151,15 @@ html.Div([
                 dcc.Tabs(id="backtest-tabs", mobile_breakpoint=0, value="returns",parent_className="custom-tabs", colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"},
                 	children=[
                 	    dcc.Tab(label="SUMMARY",value="summary", selected_className="custom-tab--selected",
-                	    	children=[
-                	    	    html.Div(id="annual-return"),
-                	    	    html.Div(id="annual-volatility"),
-                	    	    html.Div(id="calmar-ratio"),
-                	    	    html.Div(id="omega-ratio"),
-                	    	    html.Div(id="sharpe-ratio"),
-                	    	    html.Div(id="sortino-ratio"),
-                	    	    html.Div(id="downside-risk"),
-                	    	    html.Div(id="stability"),
-                	    	    html.Div(id="tail-ratio"),
-                	    	    html.Div(id="cagr")], className="custom-tab"),
+                	    	children=[], className="custom-tab"),
                 	    dcc.Tab(label="RETURNS", value="returns", selected_className="custom-tab--selected",
                 		    children=[
                 		        html.Div([
-		                            html.Div([html.Div(id="cum-returns")]),
-		                            html.Div([html.Div(id="underwater")]),
-		                            html.Div([
-		            	                html.Div([
-		    	                            html.Div(id="boxplots", className="five columns"),
-		    	                            html.Div(id="returns-heatmap", className="seven columns")], className="row flex-display")]),
-		                            html.Div([html.Div(id="rolling-vol")]),
-		                            html.Div([html.Div(id="rolling-sharpe")])])], className="custom-tab"),
+		                            html.Div([html.Div(id="returns-container")]),
+		                            html.Div([html.Div(id="drawdown-container")]),
+		                            ])], className="custom-tab"),
                 	    dcc.Tab(label="POSITIONS", value="positions", selected_className="custom-tab--selected",
-                		    children=[], className="custom-tab"),
+                		    children=[html.Div(id="positions")], className="custom-tab"),
                 	    dcc.Tab(label="TRANSACTIONS", value="transactions", selected_className="custom-tab--selected",
                 		    children=[], className="custom-tab"),
                 	]),
@@ -181,13 +170,6 @@ html.Div([
 	        className="custom-tab", selected_className="custom-tab--selected")
 	    ])######end tabs here                                               #3
     ]),
-	
-	#returns,
-            
-    #positions
-    html.Div([
-        html.Div([
-            html.Div(id="holdings")])])
 ], style = {"width":"100%", "padding-left":"0%", "padding-right":"0%"})
 
 
@@ -274,14 +256,57 @@ def get_keystats_table(ticker):
 	rmc = np.round(ticker_stats['regularMarketChange'],4)
 	rmcp = np.round(ticker_stats['regularMarketChangePercent'],4)
 
+
 	if rmc > 0:
-		rmc_tag = html.H6("+"+str(rmc)+"("+str(np.abs(rmcp))+"%"+")"+"\U00002191", style={"margim-bottom":"0px","color":"green"})
+		rmc_tag = html.H6("+"+str(rmc)+"("+str(np.abs(rmcp))+"%"+")"+"\U00002191", style={"margin-top":"0px","color":"green"})
 	else:
-		rmc_tag = html.H6("-"+str(rmc)+"("+str(np.abs(rmcp))+"%"+")"+"\U00002193", style={"margim-bottom":"0px","color":"red"})
+		rmc_tag = html.H6("-"+str(rmc)+"("+str(np.abs(rmcp))+"%"+")"+"\U00002193", style={"margin-top":"0px","color":"red"})
+
+	if ticker_stats["marketCap"]>1000000 and ticker_stats["marketCap"]<1000000000:
+		market_cap_ = round(ticker_stats["marketCap"]/1000000,1)
+		market_cap_ = "$"+str(market_cap_)+"M"
+	elif ticker_stats["marketCap"]>1000000000:
+		market_cap_ = round(ticker_stats["marketCap"]/1000000000,1)
+		market_cap_ = "$"+str(market_cap_)+"B"
+
+	close_price = html.Div([
+		html.Div([
+			html.H6("$"+str(ticker_stats['regularMarketPreviousClose']), 
+				style={"font-weight":"bold", "margin-bottom":"0px"}),
+		    rmc_tag
+		    ])], className="three columns")
 	
+	market_cap = html.Div([
+		html.Div([
+			html.H6(market_cap_, 
+				style={"font-weight":"bold", "margin-bottom":"0px"}),
+			html.H6("Market Cap",
+				style={"margin-top":"0px"})])
+		], className="three columns")
+
+	dividend_yield = html.Div([
+		html.Div([
+			html.H6(str(round(ticker_stats["epsForward"],3)), 
+				style={"font-weight":"bold", "margin-bottom":"0px"}),
+			html.H6("EPS",
+				style={"margin-top":"0px"})
+			])
+		], className="three columns")
+
+	price_earning = html.Div([
+		html.Div([
+			html.H6(round(ticker_stats["forwardPE"],3), 
+				style={"font-weight":"bold", "margin-bottom":"0px"}),
+			html.H6("PE", 
+				style={"margin-top":"0px"})
+			])
+		], className="three columns")
+
 	return html.Div([
-		html.Div([html.H5(str(ticker_stats['regularMarketPreviousClose'])+" USD")],style={"color":"black"}, className="column"),
-		html.Div([rmc_tag], className="column")], className="row")
+		close_price, 
+		market_cap, 
+		dividend_yield, 
+		price_earning], className="row")
 
 
 @app.callback(
@@ -319,11 +344,33 @@ def add_row(n_clicks, new_ticker, tickers_list):
 	[Input("ticker-names-dropdown", "value")])
 def reset_nclicks(tickers_list):
 	return 0
-
-@app.callback(Output("company-stats", "children"),
-	[Input("ticker-info","children")])
+"""
+@app.callback([
+	Output("market-cap","children"),
+	Output("trailing-annual-dy","children"),
+	Output("trailing-pe","children"),
+	Output("forward-pe","children")],
+	[Input("ticker-info","children"),])
 def company_stats(ticker): 
 	data = eval(ticker[1])
+
+	if data["marketCap"]>1000000 and data["marketCap"]<1000000000:
+		market_cap = round(data["marketCap"]/1000000,1)
+		market_cap = "$"+str(market_cap)+"M"
+	elif data["marketCap"]>1000000000 and data["marketCap"]<1000000000000:
+		market_cap = round(data["marketCap"]/1000000000,1)
+		market_cap = "$"+str(market_cap)+"B"
+
+
+
+	print(data["marketCap"])
+	company_ = html.Div([
+		html.Div([html.H6(data["marketCap"]), html.P("Market Cap")],className="column mini_container"),
+        html.Div([html.H6(data["trailingAnnualDividendYield"]), html.P("Dividend Yield")],className="column mini_container"),
+        html.Div([html.H6(data["trailingPE"]), html.P("Price Earnings")],className="column mini_container"),
+        html.Div([html.H6(data["forwardPE"]), html.P("forwardPE")],className="column mini_container"),
+        ],className="row")
+
 	keys1 = ("regularMarketOpen","regularMarketDayHigh","regularMarketDayLow","marketCap")
 	keys2 = ("forwardPE","sharesOutstanding","fiftyTwoWeekHigh","fiftyTwoWeekLow")
 	d1 = {k:data[k] for k in set(data).intersection(keys1)}
@@ -345,7 +392,8 @@ def company_stats(ticker):
 		        style_header={"border":"rgba(0,0,0,0)"},style_data={"border":"rgba(0,0,0,0)"})
 		    ])
 		    ])	    
-	return stats_table
+	return html.P("maintainance")"""
+
 
 
 @app.callback(Output("run-backtest", "n_clicks"), 
@@ -372,10 +420,8 @@ def backtest_results(n_clicks, tickers_list):
 		return json.dumps(data_sets)
 	else:
 		raise PreventUpdate
-
-@app.callback(
-	[Output("cum-returns", "children"),
-	 Output("underwater", "children"),
+"""
+@app.callback([
 	 Output("boxplots", "children"),
 	 Output("returns-heatmap", "children"),
 	 Output("rolling-vol", "children"),
@@ -393,18 +439,6 @@ def returns(n_clicks, backtest_results_df):
 	    returns = returns.drop(["index","name"], axis=1)
 
 	    layout_figure = copy.deepcopy(layout)
-	    
-	    #cummulative returns graph
-	    cum_returns_figure = go.Figure(layout=go_layout)
-	    cum_returns_figure.add_trace(go.Scatter(
-	    	x=returns.index,
-	    	y=np.cumprod(1+returns["data"])-1,
-	    	mode='lines',
-	    	fill='tozeroy',
-	    	line=dict(width=1.3, color='green'))) 
-	    cum_returns_graph = dcc.Graph(id="cum-returns", 
-	    	figure=cum_returns_figure, 
-	    	config={'displayModeBar':False})
         
         #monthly returns heatmap
 	    monthly_ret_table = ep.aggregate_returns(returns["data"], 'monthly')
@@ -413,32 +447,16 @@ def returns(n_clicks, backtest_results_df):
 	    	x=monthly_ret_table.columns,
 	    	y=monthly_ret_table.index, 
 	    	colorscale='rdylgn'), layout=go_layout)
-	    returns_heatmap = dcc.Graph(id="returns-heatmap", 
+	    returns_heatmap = html.Div(dcc.Graph(id="returns-heatmap", 
 	    	figure=returns_heatmap, 
-	    	config={'displayModeBar':False})
+	    	config={'displayModeBar':False}), className="pretty_container")
 	    
 	    #monthly returns distribution
-	    """returns_monthly_dist = go.Figure(
+	    returns_monthly_dist = go.Figure(
 	    	data=[go.Histogram(x=100*monthly_ret_table.fillna(0).values)],
 	    	layout=go_layout)
 	    returns_monthly_dist_figure = dcc.Graph(id="returns-monthly-dist", 
 	    	figure=returns_monthly_dist, 
-	    	config={'displayModeBar':False})"""
-
-	    #drawdown underwater 
-	    df_cum_rets = ep.cum_returns(returns["data"], starting_value=1.0)
-	    running_max = np.maximum.accumulate(df_cum_rets)
-	    underwater = -100*((running_max-df_cum_rets)/running_max)
-	    underwater_figure = go.Figure(layout=go_layout)
-	    underwater_figure.add_trace(go.Scatter(
-	    	x=returns.index,
-	    	y=underwater,
-	    	mode='lines',
-	    	fill='tozeroy',
-	    	line=dict(width=1.3, color='red')))
-	    
-	    underwater_graph = dcc.Graph(id="underwater", 
-	    	figure=underwater_figure, 
 	    	config={'displayModeBar':False})
 
 	    ann_ret_df = pd.DataFrame(ep.aggregate_returns(returns["data"], 'yearly'))
@@ -477,15 +495,13 @@ def returns(n_clicks, backtest_results_df):
 	    	figure=box_figure,
 	    	config={'displayModeBar':False})
 
-	return [cum_returns_graph, 
-	        underwater_graph, 
-	        boxplots_graph,
+	return [boxplots_graph,
 	        returns_heatmap, 
 	        rolling_vol_graph,
-	        rolling_sharpe_graph] 
+	        rolling_sharpe_graph]"""
 
 @app.callback(
-	Output("holdings", "children"),
+	Output("positions", "children"),
 	[Input("run-backtest", "n_clicks"),
 	Input("backtest-results", "children")])
 def positions(n_clicks, backtest_results_df):
@@ -493,13 +509,20 @@ def positions(n_clicks, backtest_results_df):
 		raise PreventUpdate
 	if n_clicks == 1:
 	    data = json.loads(backtest_results_df)
+	    #print(data["transactions"])
+	    """print("returns")
+	    print(returns)
+	    positions = eval(data["positions"])
+	    print("positions")
+	    print(positions)
+	    transactions = data["transactions"]
+	    print("transactions")
+	    print(transactions)"""
 
 	    returns = eval(data["returns"])
+	    returns_df = pd.DataFrame(returns["data"])
+	    returns_df.index = pd.to_datetime(returns["index"])
 	    positions = eval(data["positions"])
-	    transactions = eval(data["transactions"])
-	    print(returns)
-	    print(positins)
-	    print(transactions)
 	    column_names = []
 	    for i in range(0,len(positions["columns"])-1):
 	        column_names.append(positions["columns"][i]["symbol"])
@@ -507,23 +530,44 @@ def positions(n_clicks, backtest_results_df):
 	    positions_df = pd.DataFrame(positions["data"])
 	    positions_df.columns = column_names
 	    positions_df.index = pd.to_datetime(positions["index"])
-	    positions_month = positions_df.resample('1M')
+	    positions_month = positions_df.resample('1M').mean()
 	    layout_figure = copy.deepcopy(layout)
+	    
+	    positions_alloc_ = pf.pos.get_percent_alloc(positions_df)
+	    positions_alloc = positions_alloc_.resample("M").mean()
+	    top_ten = pf.pos.get_top_long_short_abs(positions_df)
+	    position_concentration = pf.pos.get_max_median_position_concentration(positions_df)
+	    long_short = pf.pos.get_long_short_pos(positions_df)
+	    
+	    symbol_sector_map = {}
+	    sectors = []
+	    for ticker in column_names[:-1]:
+	    	sectors.append(stock_data.loc[ticker]["sector"])
+	    	symbol_sector_map[ticker] = stock_data.loc[ticker]["sector"]
+	    
+	    holdings_figure = go.Figure(layout=go_layout)
+	    holdings_figure.update_layout(title="Portfolio Holdings")
+	    for ticker in column_names[:-1]:
+	    	holdings_figure.add_trace(go.Scatter(x=positions_month.index, y=positions_month[ticker], mode='lines+markers', name=ticker))
+	    holdings_graph = html.Div(dcc.Graph(id="positions",figure=holdings_figure,config={'displayModeBar':False}))
 
-	    positions_alloc = pf.pos.get_percent_alloc(positions_df)
-	    print(positions_alloc)
+	    sector_exposure = pf.pos.get_sector_exposures(positions_df, symbol_sector_map)
+	    sector_exposure_ = sector_exposure.resample("M").mean()
+	    exposure_figure = go.Figure(layout=go_layout)
+	    exposure_figure.update_layout(title="Portfolio Exposure By Sector")
+	    for sector in set(sectors):
+	    	exposure_figure.add_trace(go.Scatter(x=sector_exposure_.index, y=sector_exposure_[sector], mode='lines+markers',name=sector))
+	    exposure_graph = html.Div(dcc.Graph(id="exposure",figure=exposure_figure,config={'displayModeBar':False}))
+
+	    #for sector in symbol_sector_map
+	    #exposure_graph = html.Div(dcc.Graph(id="exposure",figure=sector_exposure_figure,config={'displayModeBar':False}))
+
+	    return html.Div([holdings_graph, exposure_graph])
 
 #summary statistics
-@app.callback([Output("annual-return","children"),
-	Output("cagr","children"),
-	Output("annual-volatility","children"),
-	Output("calmar-ratio","children"),
-	Output("omega-ratio","children"),
-	Output("sharpe-ratio","children"),
-	Output("sortino-ratio","children"),
-	Output("downside-risk","children"),
-	Output("stability","children"),
-	Output("tail-ratio","children")],
+@app.callback([
+	Output("returns-container","children"),
+	Output("drawdown-container", "children")],
 	[Input("run-backtest", "n_clicks"),
 	Input("backtest-results", "children")])
 def summary_stats(n_clicks, backtest_results_df):
@@ -537,98 +581,71 @@ def summary_stats(n_clicks, backtest_results_df):
 		returns.columns = ["returns"]
 		returns.index = pd.to_datetime(returns_dict["index"])
 		
-		annual_return = html.Div([daq.LEDDisplay(
-			    label="Annual return",
-			    value = np.round(ep.annual_volatility(returns),3),
-			    size = 10)], 
-			className="mini_container")
-		annual_volatility = html.Div([
-			    html.P("Annual Volatility"),
-			    html.H6(np.round(ep.annual_volatility(returns),3))], 
-			className="mini_container")
-		calmar_ratio = html.Div([
-			    html.P("Calmar Ratio"),
-			    html.H6(np.round(ep.calmar_ratio(returns["returns"]),3))], 
-			className="mini_container")
-		omega_ratio = html.Div([
-			    html.P("Omega Ratio"),
-			    html.H6(np.round(ep.omega_ratio(returns["returns"]),3))], 
-			className="mini_container")
-		sharpe_ratio = html.Div([
-			    html.P("Sharpe Ratio"),
-			    html.H6(np.round(ep.sharpe_ratio(returns["returns"]),3))], 
-			className="mini_container")
-		sortino_ratio = html.Div([
-			    html.P("Sortino Ratio"),
-			    html.H6(np.round(ep.sortino_ratio(returns["returns"]),3))], 
-			className="mini_container")
-		downside_risk = html.Div([
-			    html.P("Downside Risk"),
-			    html.H6(np.round(ep.downside_risk(returns["returns"]),3))], 
-			className="mini_container")
-		max_dd = html.Div([
-			    html.P("Maximun Drawdown"),
-			    html.H6(np.round(ep.max_drawdown(returns["returns"])),3)], 
-			className="mini_container")
-		#risk_estimates = html.Div(html.H6(ep.gpd_risk_estimates(returns["returns"])), className="mini_container")
-		var = html.Div([
-			    html.P("Value at Risk"),
-			    html.H6(np.round(ep.value_at_risk(returns["returns"]),3))], 
-			className="mini_container")
-		CVar = html.Div([
-			    html.P("Conditional Value at Risk"),
-			    html.H6(np.round(ep.conditional_value_at_risk(returns["returns"]),3))], 
-			className="mini_container")
-		#information_ratio = ep.information_ratio(returns["returns"])
+		cum_returns_final = html.Div([
+			html.H6(str(round(100*ep.cum_returns_final(returns["returns"]),2))+"%"
+				, style={"font-weight":"bold", "margin-bottom":"0px"}),
+			html.H6("Returns", style={"margin-top":"0px"})]
+			, className="three columns")
+
+		cagr = html.Div([
+			    html.H6(str(round(100*ep.cagr(returns["returns"]),2))+"%",
+			    	style={"font-weight":"bold", "margin-bottom":"0px"}),
+			    html.H6("Growth Rate", style={"margin-top":"0px"})]
+			, className="three columns")
+
 		alpha_, beta_ = ep.alpha_beta(returns["returns"], factor_returns)
 		alpha = html.Div([
-			    html.P("Alpha"),
-			    html.H6(np.round(alpha_,3))], 
-			className="mini_container")
-		beta = html.Div([
-			    html.P("Beta"),
-			    html.H6(np.round(beta_,3))], 
-			className="mini_container")
+			    html.H6(round(alpha_,2),
+			    	style={"font-weight":"bold", "margin-bottom":"0px"}),
+			    html.H6("Alpha", style={"margin-top":"0px"})] 
+			, className="three columns")
+		annual_volatility = html.Div([
+			    html.H6(str(round(100*ep.annual_volatility(returns["returns"]),2))+"%",
+			    	style={"font-weight":"bold", "margin-bottom":"0px"}),
+			    html.H6("Volatility", style={"margin-top":"0px"})] 
+			, className="three columns")
+		
+		returns_stats = html.Div([
+			cum_returns_final,
+			cagr,
+			annual_volatility,
+			alpha], className="row")
+		#cummulative returns graph
+		cum_returns_figure = go.Figure(layout=go_layout)
+		cum_returns_figure.add_trace(go.Scatter(x=returns.index,y=ep.cum_returns(returns["returns"]),mode='lines',fill='tozeroy',line=dict(width=1.3, color='green')))
+		cum_returns_graph = html.Div(dcc.Graph(id="cum-returns",figure=cum_returns_figure,config={'displayModeBar':False}))
+		returns_container = html.Div([html.Div(returns_stats),cum_returns_graph], className="pretty_container")
 
-		capture_ = ep.capture(returns["returns"], factor_returns)
-		capture = html.Div([
-			    html.P("Capture"),
-			    html.H6(np.round(capture_,3))], 
-			className="mini_container")
-		up_capture_ = ep.up_capture(returns["returns"], factor_returns)
-		up_capture = html.Div([
-			    html.P("Up capture"),
-			    html.H6(np.round(up_capture_,3))], 
-			className="mini_container")
-		down_capture_ = ep.down_capture(returns["returns"], factor_returns)
-		up_down_capture = ep.up_down_capture(returns["returns"], factor_returns)
-		cum_returns_final = ep.cum_returns_final(returns["returns"])
-		max
-		stability = html.Div([
-			    html.P("Stability"),
-			    html.H6(np.round(ep.stability_of_timeseries(returns["returns"]),3))], 
-			className="mini_container")
-		tail_ratio = html.Div([
-			    html.P("Tail Ratio"),
-			    html.H6(np.round(ep.tail_ratio(returns["returns"]),3))], 
-			className="mini_container")
-		cagr = html.Div([
-			    html.P("Compound Annual Growth Rate"),
-			    html.H6(np.round(ep.cagr(returns["returns"]),3))], 
-			className="mini_container")
+		#drawdown underwater
+		max_dd = html.Div([
+			        html.H6(str(round(100*ep.max_drawdown(returns["returns"]),2))+"%",
+			            style={"font-weight":"bold", "margin-bottom":"0px"}),
+			        html.H6("Maximum Drawdown", style={"margin-top":"0px"})]
+			        , className="three columns")
 
-		excess_sharpe = ep.excess_sharpe(returns["returns"], factor_returns)
+		value_at_risk = html.Div([
+			                html.H6(str(round(100*ep.value_at_risk(returns["returns"]),2))+"%",
+			                	style={"font-weight":"bold", "margin-bottom":"0px"}),
+			                html.H6("Value at Risk", style={"margin-top":"0px"})]
+			                    , className="three columns")
 
-	return [annual_return, 
-		    cagr,
-		    annual_volatility,
-		    calmar_ratio,
-            omega_ratio,
-            sharpe_ratio,
-		    sortino_ratio,
-		    downside_risk,
-		    stability,
-		    tail_ratio]
+		downside_risk = html.Div([
+			                html.H6(str(round(100*ep.downside_risk(returns["returns"]),2))+"%",
+			                	style={"font-weight":"bold", "margin-bottom":"0px"}),
+			                html.H6("Downside Risk", style={"margin-top":"0px"})]
+			                    , className="three columns")
+
+
+		drawdown_stats = html.Div([max_dd,value_at_risk,downside_risk], className="row")
+		df_cum_rets = ep.cum_returns(returns["returns"], starting_value=1.0)
+		running_max = np.maximum.accumulate(df_cum_rets)
+		underwater = -100*((running_max-df_cum_rets)/running_max)
+		underwater_figure = go.Figure(layout=go_layout)
+		underwater_figure.add_trace(go.Scatter(x=returns.index,y=underwater,mode='lines',fill='tozeroy',line=dict(width=1.3, color='red')))
+		underwater_graph = html.Div(dcc.Graph(id="underwater", figure=underwater_figure, config={'displayModeBar':False}))
+		drawdown_container = html.Div([html.Div(drawdown_stats),underwater_graph], className="pretty_container")
+		
+	return [returns_container, drawdown_container]
 	    	
 """
 @app.callback(
