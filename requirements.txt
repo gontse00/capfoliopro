@@ -50,7 +50,7 @@ pickleshare==0.7.5
 plotly==4.2.1
 prompt-toolkit==2.0.10
 ptyprocess==0.6.0
-https://github.com/gontse00/pyfolio.git
+git+https://github.com/gontse00/pyfolio.git
 Pygments==2.4.2
 pyparsing==2.4.2
 python-dateutil==2.8.0
