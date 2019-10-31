@@ -581,7 +581,26 @@ def summary_stats(n_clicks, backtest_results_df):
 		raise PreventUpdate
 	if n_clicks==1:
 		data = json.loads(backtest_results_df)
-		print(eval(data["round_trip_stats"][0]))
+		round_trip_pnl_stats = data["round_trip_stats"]
+		round_trip_pnl=json.loads(round_trip_pnl_stats[0])
+		round_trip_summary = json.loads(round_trip_pnl_stats[1])
+		round_trip_returns = json.loads(round_trip_pnl_stats[2])
+		round_trip_duration = json.loads(round_trip_pnl_stats[3])
+
+		round_trip_pnl_df = pd.DataFrame(round_trip_pnl["data"], columns=round_trip_pnl["columns"])
+		round_trip_pnl_df["names"] = round_trip_pnl["index"]
+
+		round_trip_summary = pd.DataFrame(round_trip_pnl["data"], columns=round_trip_pnl["columns"])
+		round_trip_summary["names"] = round_trip_pnl["index"]
+
+		round_trip_returns = pd.DataFrame(round_trip_pnl["data"], columns=round_trip_pnl["columns"])
+		round_trip_returns["names"] = round_trip_pnl["index"]
+
+		round_trip_duration = pd.DataFrame(round_trip_pnl["data"], columns=round_trip_pnl["columns"])
+		round_trip_duration["names"] = round_trip_pnl["index"]
+		#print(round_trip_pnl_stats_df)
+		#round_trip_pnl_df = pd.DataFrame(round_trip_pnl["data"], column_names=round_trip_pnl["columns"])
+		#print(round_trip_pnl_df)
 		returns_dict = eval(data["returns"])
 		returns = pd.DataFrame(returns_dict["data"])
 		returns.columns = ["returns"]
@@ -589,27 +608,27 @@ def summary_stats(n_clicks, backtest_results_df):
 		
 		cum_returns_final = html.Div([
 			html.H6(str(round(100*ep.cum_returns_final(returns["returns"]),2))+"%"
-				, style={"font-weight":"bold", "margin-bottom":"0px","margin-left":"10px"}),
-			html.H6("Returns", style={"margin-top":"0px", "margin-left":"10px"})]
-			, className="three columns", style={"background-color":"rgba(133, 191, 92)","border-radius":"5px"})
+				, style={"font-weight":"bold","color":"white", "margin-bottom":"0px","margin-left":"10px"}),
+			html.P("Returns",style={"font-weight":"400","color":"white","margin-top":"0px", "margin-left":"10px"})]
+			, className="three columns", style={"background-color":"rgba(15,64,168)","border-radius":"5px"})
 
 		cagr = html.Div([
 			    html.H6(str(round(100*ep.cagr(returns["returns"]),2))+"%",
-			    	style={"font-weight":"bold", "margin-bottom":"0px", "margin-left":"10px"}),
-			    html.H6("Growth Rate", style={"margin-top":"0px", "margin-left":"10px"})]
-			, className="three columns", style={"background-color":"rgba(87, 230, 120)","border-radius":"5px"})
+			    	style={"font-weight":"bold","color":"white", "margin-bottom":"0px", "margin-left":"10px"}),
+			    html.P("Growth Rate",style={"font-weight":"400","color":"white","margin-top":"0px", "margin-left":"10px"})]
+			, className="three columns", style={"background-color":"rgba(62,110,240)","border-radius":"5px"})
 
 		alpha_, beta_ = ep.alpha_beta(returns["returns"], factor_returns)
 		alpha = html.Div([
 			    html.H6(round(alpha_,2),
-			    	style={"font-weight":"bold", "margin-bottom":"0px", "margin-left":"10px"}),
-			    html.H6("Alpha", style={"margin-top":"0px","margin-left":"10px"})] 
-			, className="three columns", style={"background-color":"rgba(77, 219, 136)","border-radius":"5px"})
+			    	style={"font-weight":"bold","color":"white","margin-bottom":"0px", "margin-left":"10px"}),
+			    html.P("Alpha",style={"font-weight":"400","color":"white","margin-top":"0px","margin-left":"10px"})] 
+			, className="three columns", style={"background-color":"rgba(62,166,240)","border-radius":"5px"})
 		annual_volatility = html.Div([
 			    html.H6(str(round(100*ep.annual_volatility(returns["returns"]),2))+"%",
-			    	style={"font-weight":"bold", "margin-bottom":"0px", "margin-left":"10px"}),
-			    html.H6("Volatility", style={"margin-top":"0px","margin-left":"10px"})] 
-			, className="three columns", style={"background-color":"rgba(75, 191, 143)","border-radius":"5px"})
+			    	style={"font-weight":"bold","color":"white", "margin-bottom":"0px", "margin-left":"10px"}),
+			    html.P("Volatility",style={"font-weight":"400","color":"white","margin-top":"0px","margin-left":"10px"})] 
+			, className="three columns", style={"background-color":"rgba(13,129,158)","border-radius":"5px"})
 		
 		returns_stats = html.Div([
 			cum_returns_final,
@@ -618,36 +637,43 @@ def summary_stats(n_clicks, backtest_results_df):
 			alpha], className="row")
 		#cummulative returns graph
 		cum_returns_figure = go.Figure(layout=go_layout)
-		cum_returns_figure.add_trace(go.Scatter(x=returns.index,y=ep.cum_returns(returns["returns"]),mode='lines',fill='tozeroy',line=dict(width=1.3, color='green')))
+		cum_returns_figure.add_trace(go.Scatter(x=returns.index,y=ep.cum_returns(returns["returns"]),mode='lines',fill='tozeroy',line=dict(width=1.3, color='rgba(207, 25, 128)')))
 		cum_returns_graph = html.Div(dcc.Graph(id="cum-returns",figure=cum_returns_figure,config={'displayModeBar':False}))
 		returns_container = html.Div([html.Div(returns_stats),cum_returns_graph], className="pretty_container")
 
 		#drawdown underwater
 		max_dd = html.Div([
 			        html.H6(str(round(100*ep.max_drawdown(returns["returns"]),2))+"%",
-			            style={"font-weight":"bold", "margin-bottom":"0px","margin-left":"10px"}),
-			        html.H6("Max Drawdown", style={"margin-top":"0px","margin-left":"10px"})]
-			        , className="three columns",style={"background-color":"rgba(240, 46, 46)","border-radius":"5px"})
+			            style={"font-weight":"bold","color":"white", "margin-bottom":"0px", "margin-left":"10px"}),
+			        html.P("Max Drawdown", style={"font-weight":"400","color":"white","margin-top":"0px","margin-left":"10px"})]
+			        , className="three columns",style={"background-color":"rgba(95, 13, 158)","border-radius":"5px"})
 
 		value_at_risk = html.Div([
 			                html.H6(str(round(100*ep.value_at_risk(returns["returns"]),2))+"%",
-			                	style={"font-weight":"bold", "margin-bottom":"0px","margin-left":"10px"}),
-			                html.H6("Value at Risk", style={"margin-top":"0px","margin-left":"10px"})]
-			                    , className="three columns",style={"background-color":"rgba(240, 82, 46)","border-radius":"5px"})
+			                	style={"font-weight":"bold","color":"white", "margin-bottom":"0px", "margin-left":"10px"}),
+			                html.P("Value at Risk", style={"font-weight":"400","color":"white","margin-top":"0px","margin-left":"10px"})]
+			                    , className="three columns",style={"background-color":"rgba(110, 13, 158)","border-radius":"5px"})
 
 		downside_risk = html.Div([
 			                html.H6(str(round(100*ep.downside_risk(returns["returns"]),2))+"%",
-			                	style={"font-weight":"bold", "margin-bottom":"0px","margin-left":"10px"}),
-			                html.H6("Down Risk", style={"margin-top":"0px","margin-left":"10px"})]
-			                    , className="three columns",style={"background-color":"rgba(240, 101, 46)","border-radius":"5px"})
+			                	style={"font-weight":"bold","color":"white", "margin-bottom":"0px", "margin-left":"10px"}),
+			                html.P("Down Risk", style={"font-weight":"400","color":"white","margin-top":"0px","margin-left":"10px"})]
+			                    , className="three columns",style={"background-color":"rgba(144, 13, 158)","border-radius":"5px"})
+
+		downside_risk = html.Div([
+			                html.H6(str(round(100*ep.downside_risk(returns["returns"]),2))+"%",
+			                	style={"font-weight":"bold","color":"white", "margin-bottom":"0px", "margin-left":"10px"}),
+			                html.P("Down Risk", style={"font-weight":"400","color":"white","margin-top":"0px","margin-left":"10px"})]
+			                    , className="three columns",style={"background-color":"rgba(158, 13, 112)","border-radius":"5px"})
 
 
-		drawdown_stats = html.Div([max_dd,value_at_risk,downside_risk], className="row")
+
+		drawdown_stats = html.Div([max_dd,value_at_risk,downside_risk,downside_risk], className="row")
 		df_cum_rets = ep.cum_returns(returns["returns"], starting_value=1.0)
 		running_max = np.maximum.accumulate(df_cum_rets)
 		underwater = -100*((running_max-df_cum_rets)/running_max)
 		underwater_figure = go.Figure(layout=go_layout)
-		underwater_figure.add_trace(go.Scatter(x=returns.index,y=underwater,mode='lines',fill='tozeroy',line=dict(width=1.3, color='red')))
+		underwater_figure.add_trace(go.Scatter(x=returns.index,y=underwater,mode='lines',fill='tozeroy',line=dict(width=1.3, color="red")))
 		underwater_graph = html.Div(dcc.Graph(id="underwater", figure=underwater_figure, config={'displayModeBar':False}))
 		drawdown_container = html.Div([html.Div(drawdown_stats),underwater_graph], className="pretty_container")
 		
