@@ -31,7 +31,7 @@ benchmark = yf.Ticker("^GSPC")
 benchmark_df = benchmark.history(period="5y")["Close"]
 factor_returns = ep.simple_returns(benchmark_df)
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css',dbc.themes.BOOTSTRAP]
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css','https://codepen.io/chriddyp/pen/brPBPO.css']
 
 layout = dict(
 	color="green",
@@ -59,10 +59,12 @@ go_layout = go.Layout(
     legend=dict(font=dict(size=10), orientation="h"))
 
 app = dash.Dash(__name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}], 
-	external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css', ])
+	external_stylesheets = external_stylesheets)
 
 server = app.server
+app.title = "Capfolio"
 app.layout = html.Div([
+html.Title("Capfolio"),
 html.Div(id="output-clientside"),
 
 html.Div([
@@ -96,7 +98,7 @@ html.Div([
 		                                        html.Div([
 		                                            html.Div([
 		                                                html.Div([
-		        	                                        html.H5(id="name", style={"color":"black"}),
+		        	                                        html.H5(id="name", style={"margin-bottom":"0px","color":"black"}),
 		        	                                        html.H6(id="sector-industry", style={"marging-top":"0rem"})], className="ten columns"),
 		        	                                    html.Div(html.Button('+ portfolio',id='add-ticker-but',n_clicks=0), style={"float":"right"}, 
 		        		                            className="two columns dcc_control")], 
@@ -274,7 +276,7 @@ def get_keystats_table(ticker):
 			html.H6("$"+str(ticker_stats['regularMarketPreviousClose']), 
 				style={"font-weight":"bold", "margin-bottom":"0px"}),
 		    rmc_tag
-		    ])], className="three columns")
+		    ])], style={"margin-left":"0px", "margin-bottom":"0px"},className="price_mini_container")
 	
 	market_cap = html.Div([
 		html.Div([
@@ -282,7 +284,7 @@ def get_keystats_table(ticker):
 				style={"font-weight":"bold", "margin-bottom":"0px"}),
 			html.H6("Market Cap",
 				style={"margin-top":"0px"})])
-		], className="three columns")
+		], style={"margin-bottom":"0px"},className="price_mini_container")
 
 	dividend_yield = html.Div([
 		html.Div([
@@ -291,7 +293,7 @@ def get_keystats_table(ticker):
 			html.H6("EPS",
 				style={"margin-top":"0px"})
 			])
-		], className="three columns")
+		],style={"margin-bottom":"0px"}, className="price_mini_container")
 
 	price_earning = html.Div([
 		html.Div([
@@ -300,13 +302,13 @@ def get_keystats_table(ticker):
 			html.H6("PE", 
 				style={"margin-top":"0px"})
 			])
-		], className="three columns")
+		],style={"margin-bottom":"0px"}, className="price_mini_container")
 
 	return html.Div([
 		close_price, 
 		market_cap, 
 		dividend_yield, 
-		price_earning], className="row")
+		price_earning],className="row container-display")
 
 
 @app.callback(
@@ -412,6 +414,7 @@ def backtest_results(n_clicks, tickers_list):
 			portfolio.append(i["ticker"])
 		results = backtest_olmar(portfolio)
 		returns, positions, transactions = pf.utils.extract_rets_pos_txn_from_zipline(results)
+		print(transactions)
 		data_sets = {
 		                "returns":returns.to_json(orient='split', date_format='iso'),
 		                "positions":positions.to_json(orient='split', date_format='iso'),

@@ -44,8 +44,7 @@
 }
 .column,
 .columns {
-  width: auto;
-  float: left;
+  display: inline-block;
   box-sizing: border-box;
 }
 
@@ -65,6 +64,7 @@
   .column,
   .columns {
     margin-left: 4%;
+    display: inline-block;
   }
 
   .one.column,
@@ -76,6 +76,7 @@
   }
   .three.columns {
     width: 22%;
+    display: inline-block;
   }
   .four.columns {
     width: 30.6666666667%;
@@ -244,8 +245,8 @@ h6 {
   font-size: 1.8rem;
   line-height: 1.6;
   letter-spacing: 0;
-  margin-bottom: 0.75rem;
-  margin-top: 0.75rem;
+  margin-bottom: 0rem;
+  margin-top: 0rem;
 }
 p {
   margin-top: 0;
