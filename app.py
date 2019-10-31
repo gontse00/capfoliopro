@@ -414,11 +414,13 @@ def backtest_results(n_clicks, tickers_list):
 			portfolio.append(i["ticker"])
 		results = backtest_olmar(portfolio)
 		returns, positions, transactions = pf.utils.extract_rets_pos_txn_from_zipline(results)
-		print(transactions)
+		round_trips = pf.round_trips.extract_round_trips(transactions.drop(["dt"], axis=1))
+		round_trip_stats = pf.round_trips.gen_round_trip_stats(round_trips)
 		data_sets = {
 		                "returns":returns.to_json(orient='split', date_format='iso'),
 		                "positions":positions.to_json(orient='split', date_format='iso'),
-		                "transactions":transactions.to_json(orient='split', date_format='iso')
+		                "transactions":transactions.to_json(orient='split', date_format='iso'),
+		                "round_trip_stats":[round_trip_stats[key].to_json(orient='split', date_format='iso') for key in round_trip_stats.keys()]
 		                }
 		return json.dumps(data_sets)
 	else:
@@ -579,6 +581,7 @@ def summary_stats(n_clicks, backtest_results_df):
 		raise PreventUpdate
 	if n_clicks==1:
 		data = json.loads(backtest_results_df)
+		print(eval(data["round_trip_stats"][0]))
 		returns_dict = eval(data["returns"])
 		returns = pd.DataFrame(returns_dict["data"])
 		returns.columns = ["returns"]
@@ -586,27 +589,27 @@ def summary_stats(n_clicks, backtest_results_df):
 		
 		cum_returns_final = html.Div([
 			html.H6(str(round(100*ep.cum_returns_final(returns["returns"]),2))+"%"
-				, style={"font-weight":"bold", "margin-bottom":"0px"}),
-			html.H6("Returns", style={"margin-top":"0px"})]
-			, className="three columns")
+				, style={"font-weight":"bold", "margin-bottom":"0px","margin-left":"10px"}),
+			html.H6("Returns", style={"margin-top":"0px", "margin-left":"10px"})]
+			, className="three columns", style={"background-color":"rgba(133, 191, 92)","border-radius":"5px"})
 
 		cagr = html.Div([
 			    html.H6(str(round(100*ep.cagr(returns["returns"]),2))+"%",
-			    	style={"font-weight":"bold", "margin-bottom":"0px"}),
-			    html.H6("Growth Rate", style={"margin-top":"0px"})]
-			, className="three columns")
+			    	style={"font-weight":"bold", "margin-bottom":"0px", "margin-left":"10px"}),
+			    html.H6("Growth Rate", style={"margin-top":"0px", "margin-left":"10px"})]
+			, className="three columns", style={"background-color":"rgba(87, 230, 120)","border-radius":"5px"})
 
 		alpha_, beta_ = ep.alpha_beta(returns["returns"], factor_returns)
 		alpha = html.Div([
 			    html.H6(round(alpha_,2),
-			    	style={"font-weight":"bold", "margin-bottom":"0px"}),
-			    html.H6("Alpha", style={"margin-top":"0px"})] 
-			, className="three columns")
+			    	style={"font-weight":"bold", "margin-bottom":"0px", "margin-left":"10px"}),
+			    html.H6("Alpha", style={"margin-top":"0px","margin-left":"10px"})] 
+			, className="three columns", style={"background-color":"rgba(77, 219, 136)","border-radius":"5px"})
 		annual_volatility = html.Div([
 			    html.H6(str(round(100*ep.annual_volatility(returns["returns"]),2))+"%",
-			    	style={"font-weight":"bold", "margin-bottom":"0px"}),
-			    html.H6("Volatility", style={"margin-top":"0px"})] 
-			, className="three columns")
+			    	style={"font-weight":"bold", "margin-bottom":"0px", "margin-left":"10px"}),
+			    html.H6("Volatility", style={"margin-top":"0px","margin-left":"10px"})] 
+			, className="three columns", style={"background-color":"rgba(75, 191, 143)","border-radius":"5px"})
 		
 		returns_stats = html.Div([
 			cum_returns_final,
@@ -622,21 +625,21 @@ def summary_stats(n_clicks, backtest_results_df):
 		#drawdown underwater
 		max_dd = html.Div([
 			        html.H6(str(round(100*ep.max_drawdown(returns["returns"]),2))+"%",
-			            style={"font-weight":"bold", "margin-bottom":"0px"}),
-			        html.H6("Maximum Drawdown", style={"margin-top":"0px"})]
-			        , className="three columns")
+			            style={"font-weight":"bold", "margin-bottom":"0px","margin-left":"10px"}),
+			        html.H6("Max Drawdown", style={"margin-top":"0px","margin-left":"10px"})]
+			        , className="three columns",style={"background-color":"rgba(240, 46, 46)","border-radius":"5px"})
 
 		value_at_risk = html.Div([
 			                html.H6(str(round(100*ep.value_at_risk(returns["returns"]),2))+"%",
-			                	style={"font-weight":"bold", "margin-bottom":"0px"}),
-			                html.H6("Value at Risk", style={"margin-top":"0px"})]
-			                    , className="three columns")
+			                	style={"font-weight":"bold", "margin-bottom":"0px","margin-left":"10px"}),
+			                html.H6("Value at Risk", style={"margin-top":"0px","margin-left":"10px"})]
+			                    , className="three columns",style={"background-color":"rgba(240, 82, 46)","border-radius":"5px"})
 
 		downside_risk = html.Div([
 			                html.H6(str(round(100*ep.downside_risk(returns["returns"]),2))+"%",
-			                	style={"font-weight":"bold", "margin-bottom":"0px"}),
-			                html.H6("Downside Risk", style={"margin-top":"0px"})]
-			                    , className="three columns")
+			                	style={"font-weight":"bold", "margin-bottom":"0px","margin-left":"10px"}),
+			                html.H6("Down Risk", style={"margin-top":"0px","margin-left":"10px"})]
+			                    , className="three columns",style={"background-color":"rgba(240, 101, 46)","border-radius":"5px"})
 
 
 		drawdown_stats = html.Div([max_dd,value_at_risk,downside_risk], className="row")
