@@ -13,14 +13,29 @@ import yfinance as yf
 
 def backtest_olmar(STOCKS):
 	df_dict = OrderedDict()
-	for ticker in STOCKS:
-		#df = web.DataReader(ticker, "yahoo", start = datetime(2016,1,1,0,0,0,0))
-		#df = web.DataReader(ticker, 'yahoo', start=datetime(2015,1,1,0,0,0,0), end=datetime.today())["Close"]
-		ticker_df = yf.Ticker(ticker)
-		df = ticker_df.history(period="5y")
-		df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
-		df_dict[ticker] = df
-	data = pd.Panel(df_dict)
+	try:
+		print("Using Yahoo Finance API......")
+		for ticker in STOCKS:
+			ticker_df = yf.Ticker(ticker)
+			df = ticker_df.history(period="5y")
+			df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+			df_dict[ticker] = df
+		data = pd.Panel(df_dict)
+	except:
+		print("Error in implimenting Yahoo Finance API")
+	try:
+		print("*****Using Local Data File******")
+		data_dir = "/home/gontse/zipline_dash/data/price_data.csv"
+		df_prices = pd.read_csv(data_dir) 
+		df_prices = df_prices.set_index(['ticker', 'date'])
+		for ticker in STOCKS:
+			df = df_prices.xs(ticker, level="ticker")
+			df.index = pd.to_datetime(df.index, utc = True)
+			#df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+			df_dict[ticker] = df
+		data = pd.Panel(df_dict)
+	except:
+		print("Could not retrieve local data file")
 
 	def initialize(algo, eps=1, window_length=5):
 	    algo.stocks = STOCKS
@@ -83,7 +98,7 @@ def backtest_olmar(STOCKS):
 
 	portfolio =  zipline.run_algorithm(data=data, 
 		start=datetime(2016,1,15,0,0,0,0,pytz.utc),
-		end=datetime(2019,6,1,0,0,0,0,pytz.utc),
+		end=datetime(2017,1,2,0,0,0,0,pytz.utc),
 		initialize=initialize,
 	    capital_base = 100000.0,
 	    handle_data = handle_data)
@@ -92,5 +107,6 @@ def backtest_olmar(STOCKS):
 #import pyfolio as pf 
 #returns, positions, transactions = pf.utils.extract_rets_pos_txn_from_zipline(portfolio)
 #pf.create_full_tear_sheet(returns, positions=positions, transactions=transactions, round_trips=True)
-#tickers = ["AAPL", "AMZN"]
+#tickers = ["FB", "AMZN"]
 #portfolio = backtest_olmar(tickers)
+#print(portfolio.info())

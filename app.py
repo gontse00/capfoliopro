@@ -27,8 +27,14 @@ stock_data.index = stock_data["symbol"]
 dropdown_options = [{'label':stock_data['name'][i], 'value':stock_data['symbol'][i]} for i in range(0,len(stock_data))]
 stock_data.index = stock_data["symbol"]
 stock_data.drop("symbol", axis=1)
-benchmark = yf.Ticker("^GSPC")
-benchmark_df = benchmark.history(period="5y")["Close"]
+df_prices = pd.read_csv("/home/gontse/zipline_dash/data/price_data.csv")
+df_prices = df_prices.set_index(['ticker', 'date'])
+#benchmark = yf.Ticker("^GSPC")
+try:
+    benchmark_df = benchmark.history(period="5y")["Close"]
+except:
+	benchmark_df = df_prices.xs("A", level="ticker")
+	benchmark_df.index = pd.to_datetime(benchmark_df.index, utc = True)
 factor_returns = ep.simple_returns(benchmark_df)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css','https://codepen.io/chriddyp/pen/brPBPO.css']
@@ -181,9 +187,29 @@ html.Div([
 @app.callback(Output("ticker-info","children"),
 	[Input("ticker-names-dropdown","value")])
 def collect_ticker_info(ticker):
-	ticker_data = yf.Ticker(ticker)
-	ticker_stats = ticker_data.info
-	ticker_history = ticker_data.history(period="5y")["Close"]
+	try:
+		print("collecting ticker info using Yahoo Finance API....")
+		ticker_data = yf.Ticker(ticker)
+		ticker_stats = ticker_data.info
+		ticker_history = ticker_data.history(period="5y")["Close"]
+	except:
+		print("Error using Yahoo Finance API")
+	
+	try:
+		ticker_stats = {
+		    "regularMarketChange": 0.0,
+		    "regularMarketChangePercent": 0.0,
+		    "marketCap": 10000000.0,
+		    "regularMarketPreviousClose": 0.0,
+		    "epsForward": 0.0,
+		    "forwardPE": 0.0
+		    } 
+		ticker_history = df_prices.xs(ticker, level="ticker")
+	except:
+		pass
+	#ticker_data = yf.Ticker(ticker)
+	#ticker_stats = ticker_data.info
+	#ticker_history = ticker_data.history(period="5y")["Close"]
 	return [ticker_history.to_json(orient='split', date_format='iso'), str(ticker_stats)] 
 
 @app.callback(
@@ -206,47 +232,54 @@ def get_graph(ticker_info,tab):
 	#df = data.history(period="5y")["Close"]
 	price = json.loads(ticker_info[0])
 	price_index = price["index"]
+	#print(price_index)
 	price_data = price["data"]
-	a_data = price_data[-1:][0]-price_data[-30:-29][0]
-	b_data = price_data[-1:][0]-price_data[-130:-129][0]
-	c_data = price_data[-1:][0]-price_data[-260:-259][0]
-	d_data = price_data[-1:][0]-price_data[1]
+	#print(price_data)
+	price_data = pd.DataFrame(price_data, 
+		columns=["open", "high", "low", "close", "volume"], 
+		index = pd.to_datetime(price_index))
+	#price_data.columns = ["open", "high", "low", "close", "volume"]
+	#price_data.index = pd.to_datetime(price_index)
+	a_data = price_data["close"][-1:]-price_data["close"][-30]
+	b_data = price_data["close"][-1:]-price_data["close"][-130]
+	c_data = price_data["close"][-1:]-price_data["close"][-260]
+	d_data = price_data["close"][-1:]-price_data["close"][1]
 
 	m_figure = go.Figure(layout=go_layout)
 
-	if tab=="1-month-tab" and a_data>0:
-		m_figure.add_trace(go.Scatter(x=price_index[-30:],y=price_data[-30:],mode='lines',line=dict(color="green")))
+	if tab=="1-month-tab" and a_data.any()>0:
+		m_figure.add_trace(go.Scatter(x=price_data.index[-30:],y=price_data["close"][-30:],mode='lines',line=dict(color="green")))
 		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 		return figure
-	elif tab=="1-month-tab" and a_data<0:
-		m_figure.add_trace(go.Scatter(x=price_index[-30:],y=price_data[-30:],mode='lines',line=dict(color="red")))
+	elif tab=="1-month-tab" and a_data.any()<0:
+		m_figure.add_trace(go.Scatter(x=price_data.index[-30:],y=price_data["close"][-30:],mode='lines',line=dict(color="red")))
 		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 		return figure
 
-	if tab=="6-months-tab" and b_data>0:
-		m_figure.add_trace(go.Scatter(x=price_index[-130:],y=price_data[-130:],mode='lines',line=dict(color="green")))
+	if tab=="6-months-tab" and b_data.any()>0:
+		m_figure.add_trace(go.Scatter(x=price_data.index[-130:],y=price_data["close"][-130:],mode='lines',line=dict(color="green")))
 		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 		return figure
-	elif tab=="6-months-tab" and b_data<0:
-		m_figure.add_trace(go.Scatter(x=price_index[-130:],y=price_data[-130:],mode='lines',line=dict(color="red")))
+	elif tab=="6-months-tab" and b_data.any()<0:
+		m_figure.add_trace(go.Scatter(x=price_data.index[-130:],y=price_data["close"][-130:],mode='lines',line=dict(color="red")))
 		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 		return figure
 	
-	if tab=="1-year-tab" and c_data>0:
-	    m_figure.add_trace(go.Scatter(x=price_index[-260:],y=price_data[-260:],mode='lines',line=dict(color="green")))
+	if tab=="1-year-tab" and c_data.any()>0:
+	    m_figure.add_trace(go.Scatter(x=price_data.index[-260:],y=price_data["close"][-260:],mode='lines',line=dict(color="green")))
 	    figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 	    return figure
-	elif tab=="1-year-tab" and c_data<0:
-		m_figure.add_trace(go.Scatter(x=price_index[-260:],y=price_data[-260:],mode='lines',line=dict(color="red")))
+	elif tab=="1-year-tab" and c_data.any()<0:
+		m_figure.add_trace(go.Scatter(x=price_data.index[-260:],y=price_data["close"][-260:],mode='lines',line=dict(color="red")))
 		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 		return figure
 
-	if tab=="5-years-tab" and d_data>0:
-		m_figure.add_trace(go.Scatter(x=price_index,y=price_data,mode='lines',line=dict(color="green")))
+	if tab=="5-years-tab" and d_data.any()>0:
+		m_figure.add_trace(go.Scatter(x=price_data.index,y=price_data["close"],mode='lines',line=dict(color="green")))
 		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 		return figure
-	elif tab=="5-years-tab" and d_data<0:
-		m_figure.add_trace(go.Scatter(x=price_index,y=price_data,mode='lines',line=dict(color="red")))
+	elif tab=="5-years-tab" and d_data.any()<0:
+		m_figure.add_trace(go.Scatter(x=price_data.index,y=price_data["close"],mode='lines',line=dict(color="red")))
 		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 		return figure
 
@@ -589,18 +622,20 @@ def summary_stats(n_clicks, backtest_results_df):
 
 		round_trip_pnl_df = pd.DataFrame(round_trip_pnl["data"], columns=round_trip_pnl["columns"])
 		round_trip_pnl_df["names"] = round_trip_pnl["index"]
-
-		round_trip_summary = pd.DataFrame(round_trip_pnl["data"], columns=round_trip_pnl["columns"])
-		round_trip_summary["names"] = round_trip_pnl["index"]
-
-		round_trip_returns = pd.DataFrame(round_trip_pnl["data"], columns=round_trip_pnl["columns"])
-		round_trip_returns["names"] = round_trip_pnl["index"]
-
-		round_trip_duration = pd.DataFrame(round_trip_pnl["data"], columns=round_trip_pnl["columns"])
-		round_trip_duration["names"] = round_trip_pnl["index"]
-		#print(round_trip_pnl_stats_df)
-		#round_trip_pnl_df = pd.DataFrame(round_trip_pnl["data"], column_names=round_trip_pnl["columns"])
 		#print(round_trip_pnl_df)
+
+		round_trip_summary_df = pd.DataFrame(round_trip_summary["data"], columns=round_trip_pnl["columns"])
+		round_trip_summary_df["names"] = round_trip_summary["index"]
+		#print(round_trip_summary_df)
+
+		round_trip_returns_df = pd.DataFrame(round_trip_returns["data"], columns=round_trip_pnl["columns"])
+		round_trip_returns_df["names"] = round_trip_returns["index"]
+		#print(round_trip_returns_df)
+
+		round_trip_duration_df = pd.DataFrame(round_trip_duration["data"], columns=round_trip_pnl["columns"])
+		round_trip_duration_df["names"] = round_trip_duration["index"]
+		#print(round_trip_duration_df)
+
 		returns_dict = eval(data["returns"])
 		returns = pd.DataFrame(returns_dict["data"])
 		returns.columns = ["returns"]
