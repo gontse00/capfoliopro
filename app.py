@@ -24,6 +24,11 @@ import dash_daq as daq
 
 stock_data = pd.read_csv(os.path.join(os.getcwd(),'data/new_stock_data.csv'))
 stock_data.index = stock_data["symbol"]
+rank_data  = pd.read_csv(os.path.join(os.getcwd(), 'data/rank_data.csv'))
+rank_data.index = rank_data["Symbol"]
+new_rank_data = stock_data.join(rank_data, how="inner").sort_values(by=["rank"])
+new_rank_data = new_rank_data.drop(["symbol.1", "Unnamed: 0", "Symbol", "Company"], axis=1)
+short_discreption = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 dropdown_options = [{'label':stock_data['name'][i], 'value':stock_data['symbol'][i]} for i in range(0,len(stock_data))]
 stock_data.index = stock_data["symbol"]
 stock_data.drop("symbol", axis=1)
@@ -33,8 +38,8 @@ df_prices = df_prices.set_index(['ticker', 'date'])
 try:
     benchmark_df = benchmark.history(period="5y")["Close"]
 except:
-	benchmark_df = df_prices.xs("A", level="ticker")
-	benchmark_df.index = pd.to_datetime(benchmark_df.index, utc = True)
+	benchmark_df = df_prices.xs("A", level="ticker")["close"]
+	benchmark_df.index = pd.to_datetime(benchmark_df.index)
 factor_returns = ep.simple_returns(benchmark_df)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css','https://codepen.io/chriddyp/pen/brPBPO.css']
@@ -107,8 +112,10 @@ html.Div([
 		        	                                        html.H5(id="name", style={"margin-bottom":"0px","color":"black"}),
 		        	                                        html.H6(id="sector-industry", style={"marging-top":"0rem"})], className="ten columns"),
 		        	                                    html.Div(html.Button('+ portfolio',id='add-ticker-but',n_clicks=0), style={"float":"right"}, 
-		        		                            className="two columns dcc_control")], 
-		        	                            style={"marging-top":"25px"} ,className="row"),
+		        		                            className="two columns dcc_control"),
+		        		                                html.Div(html.P(short_discreption), style = {"padding":"5px"},className="row"), 
+		        	                                    ],
+		        	                            style={"margin-left":"0px", "marging-top":"25px"} ,className="row price_mini_container"),
 		                                        ])
 		                                     ]),
                 		            	html.Div([html.Div(id="previous-close")]),
@@ -134,7 +141,8 @@ html.Div([
 		        		                    , colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"}),
 
 
-		                                    html.Div(id="price-history-figure")
+		                                    html.Div(id="price-history-figure"),
+		                                    html.Div(id="similar-stocks")
 		                                ], className="pretty_container"),]
 		                        , className="custom-tab", selected_className="custom-tab--selected"),
 
@@ -210,16 +218,71 @@ def collect_ticker_info(ticker):
 	#ticker_data = yf.Ticker(ticker)
 	#ticker_stats = ticker_data.info
 	#ticker_history = ticker_data.history(period="5y")["Close"]
+	company = stock_data.loc[ticker]
+	similar_stocks = new_rank_data.loc[new_rank_data["sector"]==company["sector"]].sort_values(by="rank")
+	similar_stocks.index = range(len(similar_stocks))
+	print(similar_stocks.head())
 	return [ticker_history.to_json(orient='split', date_format='iso'), str(ticker_stats)] 
 
 @app.callback(
 	[Output("name", "children"),
-	Output("sector-industry", "children")],
+	Output("sector-industry", "children"),
+	Output("similar-stocks", "children")],
 	[Input("ticker-names-dropdown", "value")])
 def get_company(ticker):
 	company = stock_data.loc[ticker]
 	sec_ind = html.H6(str(company["sector"])+" ("+str(company["industry"])+")")
-	return company["name"], sec_ind
+	similar_stocks = new_rank_data.loc[new_rank_data["sector"]==company["sector"]].sort_values(by="rank")
+	similar_stocks.index = range(len(similar_stocks))
+
+	similar_stocks_1 = html.Div([
+		html.Div([
+			html.H6(similar_stocks.loc[0]["name"],
+				style={"margin-bottom":"0px","color":"black"})]),
+			html.H6(similar_stocks.loc[0]["industry"], 
+				style={"margin-bottom":"0px"}),
+			html.Div(html.Button('compare',id='compare-1',n_clicks=0), style={"margin-bottom":"0px"}, className="row dcc_control")
+		], style={"margin-bottom":"0px"},className="three columns price_mini_container")
+
+	similar_stocks_2 = html.Div([
+		html.Div([
+			html.H6(similar_stocks.loc[1]["name"],
+				style={"margin-bottom":"0px","color":"black"})]),
+			html.H6(similar_stocks.loc[1]["industry"], 
+				style={"margin-bottom":"0px"}),
+			html.Div(html.Button('compare',id='compare-2', style={"background-color":"blue"}, n_clicks=0), style={"margin-bottom":"0px"}, className="row dcc_control")
+		], style={"margin-bottom":"0px"},className="three columns price_mini_container")
+
+	similar_stocks_3 = html.Div([
+		html.Div([
+			html.H6(similar_stocks.loc[2]["name"],
+				style={"margin-bottom":"0px","color":"black"})]),
+			html.H6(similar_stocks.loc[2]["industry"], 
+				style={"margin-bottom":"0px"}),
+			html.Div(html.Button('compare',id='compare-3',n_clicks=0), style={"margin-bottom":"0px"}, className="row dcc_control")
+		], style={"margin-bottom":"0px"},className="three columns price_mini_container")
+
+	similar_stocks_4 = html.Div([
+		html.Div([
+			html.H6(similar_stocks.loc[3]["name"],
+				style={"margin-bottom":"0px","color":"black"})]),
+			html.H6(similar_stocks.loc[3]["industry"], 
+				style={"margin-bottom":"0px"}),
+			html.Div(html.Button('compare',id='compare-4',n_clicks=0), style={"margin-bottom":"0px"}, className="row dcc_control")
+		], style={"margin-bottom":"0px"},className="three columns price_mini_container")
+
+	similar_stocks_table = html.Div(children=[similar_stocks_1, 
+		similar_stocks_2, 
+		similar_stocks_3, 
+		similar_stocks_4], className="row container-display")
+	return company["name"], sec_ind, similar_stocks_table
+
+@app.callback(
+	Output("compare-output", "chidren"),
+	[Input("compare-1", "n_clicks")])
+def compare_modal(n1):
+	return
+
 
 #Tabs(Overview, Financials, Comapare)
 #@app.callback()
@@ -240,15 +303,20 @@ def get_graph(ticker_info,tab):
 		index = pd.to_datetime(price_index))
 	#price_data.columns = ["open", "high", "low", "close", "volume"]
 	#price_data.index = pd.to_datetime(price_index)
+	price_data["MA_14"] = price_data["close"].rolling(10).mean()
+	price_data["STD"] = price_data["close"].rolling(10).std()
+	price_data["upper_bol"] = price_data["MA_14"] + 2*price_data["STD"]
+	price_data["lower_bol"] = price_data["MA_14"] - 2*price_data["STD"]
 	a_data = price_data["close"][-1:]-price_data["close"][-30]
-	b_data = price_data["close"][-1:]-price_data["close"][-130]
 	c_data = price_data["close"][-1:]-price_data["close"][-260]
+	b_data = price_data["close"][-1:]-price_data["close"][-130]
 	d_data = price_data["close"][-1:]-price_data["close"][1]
 
 	m_figure = go.Figure(layout=go_layout)
 
 	if tab=="1-month-tab" and a_data.any()>0:
 		m_figure.add_trace(go.Scatter(x=price_data.index[-30:],y=price_data["close"][-30:],mode='lines',line=dict(color="green")))
+
 		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 		return figure
 	elif tab=="1-month-tab" and a_data.any()<0:
@@ -290,6 +358,8 @@ def get_keystats_table(ticker):
 	ticker_stats = eval(ticker[1])
 	rmc = np.round(ticker_stats['regularMarketChange'],4)
 	rmcp = np.round(ticker_stats['regularMarketChangePercent'],4)
+	ma_ = 200
+	rsi_ = 45
 
 
 	if rmc > 0:
@@ -306,42 +376,62 @@ def get_keystats_table(ticker):
 
 	close_price = html.Div([
 		html.Div([
+		    rmc_tag,
 			html.H6("$"+str(ticker_stats['regularMarketPreviousClose']), 
 				style={"font-weight":"bold", "margin-bottom":"0px"}),
-		    rmc_tag
-		    ])], style={"margin-left":"0px", "margin-bottom":"0px"},className="price_mini_container")
+		    ])], style={"margin-left":"0px", "margin-bottom":"0px"},className="two columns price_mini_container")
 	
 	market_cap = html.Div([
 		html.Div([
+			html.H6("Market Cap",
+				style={"margin-top":"0px"})]),
 			html.H6(market_cap_, 
 				style={"font-weight":"bold", "margin-bottom":"0px"}),
-			html.H6("Market Cap",
-				style={"margin-top":"0px"})])
-		], style={"margin-bottom":"0px"},className="price_mini_container")
+		], style={"margin-bottom":"0px"},className="two columns price_mini_container")
 
 	dividend_yield = html.Div([
 		html.Div([
+			html.H6("EPS",
+				style={"margin-top":"0px"}),
 			html.H6(str(round(ticker_stats["epsForward"],3)), 
 				style={"font-weight":"bold", "margin-bottom":"0px"}),
-			html.H6("EPS",
-				style={"margin-top":"0px"})
 			])
-		],style={"margin-bottom":"0px"}, className="price_mini_container")
+		],style={"margin-bottom":"0px"}, className="two columns price_mini_container")
 
 	price_earning = html.Div([
 		html.Div([
+			html.H6("PE", 
+				style={"margin-top":"0px"}),
 			html.H6(round(ticker_stats["forwardPE"],3), 
 				style={"font-weight":"bold", "margin-bottom":"0px"}),
-			html.H6("PE", 
-				style={"margin-top":"0px"})
 			])
-		],style={"margin-bottom":"0px"}, className="price_mini_container")
+		],style={"margin-bottom":"0px"}, className="two columns price_mini_container")
+
+	moving_average = html.Div([
+		html.Div([
+			html.H6("90Day MA", 
+				style={"margin-top":"0px"}),
+			html.H6(ma_, 
+				style={"font-weight":"bold", "margin-bottom":"0px"}),
+			])
+		],style={"margin-bottom":"0px"}, className="two columns price_mini_container")
+
+	streng_index = html.Div([
+		html.Div([
+			html.H6("RSI",
+				style={"margin-top":"0px"}),
+			html.H6(rsi_, 
+				style={"font-weight":"bold", "margin-bottom":"0px"}),
+			])
+		],style={"margin-bottom":"0px"}, className="two columns price_mini_container")
 
 	return html.Div([
 		close_price, 
 		market_cap, 
 		dividend_yield, 
-		price_earning],className="row container-display")
+		price_earning,
+		moving_average,
+		streng_index],className="row container-display")
 
 
 @app.callback(
@@ -609,7 +699,6 @@ def positions(n_clicks, backtest_results_df):
 	[Input("run-backtest", "n_clicks"),
 	Input("backtest-results", "children")])
 def summary_stats(n_clicks, backtest_results_df):
-	factor_returns = benchmark_df
 	if n_clicks==0:
 		raise PreventUpdate
 	if n_clicks==1:
@@ -622,19 +711,19 @@ def summary_stats(n_clicks, backtest_results_df):
 
 		round_trip_pnl_df = pd.DataFrame(round_trip_pnl["data"], columns=round_trip_pnl["columns"])
 		round_trip_pnl_df["names"] = round_trip_pnl["index"]
-		#print(round_trip_pnl_df)
+		print(round_trip_pnl_df)
 
 		round_trip_summary_df = pd.DataFrame(round_trip_summary["data"], columns=round_trip_pnl["columns"])
 		round_trip_summary_df["names"] = round_trip_summary["index"]
-		#print(round_trip_summary_df)
+		print(round_trip_summary_df)
 
 		round_trip_returns_df = pd.DataFrame(round_trip_returns["data"], columns=round_trip_pnl["columns"])
 		round_trip_returns_df["names"] = round_trip_returns["index"]
-		#print(round_trip_returns_df)
+		print(round_trip_returns_df)
 
 		round_trip_duration_df = pd.DataFrame(round_trip_duration["data"], columns=round_trip_pnl["columns"])
 		round_trip_duration_df["names"] = round_trip_duration["index"]
-		#print(round_trip_duration_df)
+		print(round_trip_duration_df)
 
 		returns_dict = eval(data["returns"])
 		returns = pd.DataFrame(returns_dict["data"])
