@@ -53,8 +53,8 @@ layout = dict(
     hovermode="closest",
     plot_bgcolor="rgba(0,0,0,0)",
     paper_bgcolor="rgba(0,0,0,0)",
-    xaxis1={"gridcolor": "rgb(215, 222, 217)", "zerolinecolor":"rgb(215, 222, 217)"},
-    yaxis1={"gridcolor": "rgb(215, 222, 217)"},
+    xaxis1={"gridcolor": "#494a49", "zerolinecolor":"#494a49"},
+    yaxis1={"gridcolor": "#494a49"},
     legend=dict(font=dict(size=10), orientation="h")
 )
 
@@ -65,12 +65,11 @@ go_layout = go.Layout(
     hovermode="closest",
     plot_bgcolor="rgba(0,0,0,0)",
     paper_bgcolor="rgba(0,0,0,0)",
-    xaxis1={"gridcolor":"rgb(215, 222, 217)", "zerolinecolor":"rgb(215, 222, 217)"},
-    yaxis1={"gridcolor":"rgb(215, 222, 217)"},
+    xaxis1={"gridcolor":"#494a49", "zerolinecolor":"#494a49"},
+    yaxis1={"gridcolor":"#494a49"},
     legend=dict(font=dict(size=10), orientation="h"))
 
-app = dash.Dash(__name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}], 
-	external_stylesheets = external_stylesheets)
+app = dash.Dash(__name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}], external_stylesheets=[dbc.themes.LITERA])
 
 server = app.server
 app.title = "Capfolio"
@@ -78,84 +77,76 @@ app.layout = html.Div([
 html.Title("Capfolio"),
 html.Div(id="output-clientside"),
 
-html.Div([
+dbc.Container([
 	html.Div([
 		html.Div([
-			html.H3("Porfolio Optimization & Risk Analysis",style={"marging-bottom":"0px", "text-align":"center"}),
-			html.H5("An Event Driven Backtester",style = {"marging-top":"0px", "text-align":"center"})],
-			    id = "title",style = {"marging-bottom":"25px"})]),
+			html.H3("Porfolio Optimization & Risk Analysis"),
+			html.H5("An Event Driven Backtester")],
+			    id = "title")]),
+	html.Br(),
 	######start tabs here
-	dcc.Tabs(id="page-tabs",value="EXPLORE", mobile_breakpoint=0,parent_className="custom-tabs", colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"},
+	dbc.Tabs(id="page-tabs",active_tab="explore",
 		children=[
-	    dcc.Tab(label="EXPLORE", value="EXPLORE", className="custom-tab", selected_className="custom-tab--selected",
+	    dbc.Tab(label="Explore", tab_id="explore",
 		    children=[
-		        html.Hr(),
+		        html.Br(),
 	            html.Div([
     	            html.Div([
-	                    dcc.Dropdown(id="ticker-names-dropdown",options=dropdown_options,value=stock_data['symbol'][0]),])], 
-    	                    style = {"marging-bottom":"10px"}),        #1
+	                    dcc.Dropdown(id="ticker-names-dropdown",options=dropdown_options,value=stock_data['symbol'][0]),])
+	                    ]), 
+	            html.Br(),
+	                   #1
                 html.Div(id="ticker-info", style={"display":"none"}),  #2 
 
                 html.Div([
-		            
-
-                    dcc.Tabs(id="tabs",mobile_breakpoint=0, value="overview", parent_className="custom-tabs",
+                    dbc.Tabs(id="tabs", active_tab="overview",
         	            children=[
-                            dcc.Tab(label="Overview", value="overview", 
+                            dbc.Tab(label="Overview", tab_id="overview", 
                 	            children=[
                 		                html.Div([], ),
                 		                html.Div([
-                		            	    html.Div([
-		                                        html.Div([
-		                                            html.Div([
-		                                                html.Div([
-		        	                                        html.H5(id="name", style={"margin-bottom":"0px","color":"black"}),
-		        	                                        html.H6(id="sector-industry", style={"marging-top":"0rem"})], className="ten columns"),
-		        	                                    html.Div(html.Button('+ portfolio',id='add-ticker-but',n_clicks=0), style={"float":"right"}, 
-		        		                            className="two columns dcc_control"),
-		        		                                html.Div(html.P(short_discreption), style = {"padding":"5px"},className="row"), 
-		        	                                    ],
-		        	                            style={"margin-left":"0px", "marging-top":"25px"} ,className="row price_mini_container"),
+                		            	    dbc.Card([
+		                                        dbc.CardBody([
+		                                            dbc.Row([
+		                                                dbc.Col([
+		        	                                        html.H5(id="name", className="card-title"),
+		        	                                        html.H6(id="sector-industry", className="card-text")], md=9),
+		        	                                    dbc.Col(dbc.Button('+ portfolio',id='add-ticker-but',n_clicks=0, color="primary"),md=3),
+		        	                                    ]),
+		        		                            html.Div(html.P(short_discreption, className="card-text")), 
 		                                        ])
-		                                     ]),
+		                                     ], className="card border-dark"),
+                		            	html.Br(),
                 		            	html.Div([html.Div(id="previous-close")]),
                 		            	
-		        	                    dcc.Tabs(id="time-tabs", mobile_breakpoint=0, value="1-year-tab",parent_className="custom-tabs",
+                		            	html.Br(),
+
+		        	                    dbc.Tabs(id="time-tabs", active_tab="1-year-tab",
 		        		                    children=[
-		        		                        dcc.Tab(label="1D", value="1-day-tab", className="custom-tab", 
-		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="5D", value="5-days-tab", className="custom-tab", 
-		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="1M", value="1-month-tab", className="custom-tab", 
-		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="6M", value="6-months-tab", className="custom-tab", 
-		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="1Y", value="1-year-tab", className="custom-tab", 
-		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="YTD", value="year-to-date", className="custom-tab", 
-		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="5Y", value="5-years-tab", className="custom-tab", 
-		        		          	                selected_className="custom-tab--selected"),
-		        		                        dcc.Tab(label="max", value="max", className="custom-tab", 
-		        		          	                selected_className="custom-tab--selected"),]
-		        		                    , colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"}),
+		        		                        dbc.Tab(label="1day", tab_id="1-day-tab"),
+		        		                        dbc.Tab(label="5days", tab_id="5-days-tab"),
+		        		                        dbc.Tab(label="1month", tab_id="1-month-tab"),
+		        		                        dbc.Tab(label="6months", tab_id="6-months-tab"),
+		        		                        dbc.Tab(label="1year", tab_id="1-year-tab"),
+		        		                        dbc.Tab(label="YTD", tab_id="year-to-date"),
+		        		                        dbc.Tab(label="5years", tab_id="5-years-tab"),
+		        		                        dbc.Tab(label="max", tab_id="max")], style = {"padding":"0px"}),
+                                            dbc.Card(dbc.CardBody(html.Div(id="price-history-figure")), className="card border-dark"),
+		                                    html.Br(),
+		                                    html.Div(id="similar-stocks"),
+		                                    html.Div([html.Div(id="open-1"),dbc.Modal([dbc.ModalFooter(dbc.Button("Close", id="close-1", className="ml-auto"))], id= "modal-1")]),
+		                                    html.Div([html.Div(id="open-2"),dbc.Modal([dbc.ModalFooter(dbc.Button("Close", id="close-2", className="ml-auto"))], id= "modal-2")]),
+		                                    html.Div([html.Div(id="open-3"),dbc.Modal([dbc.ModalFooter(dbc.Button("Close", id="close-3", className="ml-auto"))], id= "modal-3")]),
+		                                    html.Div([html.Div(id="open-4"),dbc.Modal([dbc.ModalFooter(dbc.Button("Close", id="close-4", className="ml-auto"))], id= "modal-4")])
+		                                ])]),
 
-
-		                                    html.Div(id="price-history-figure"),
-		                                    html.Div(id="similar-stocks")
-		                                ], className="pretty_container"),]
-		                        , className="custom-tab", selected_className="custom-tab--selected"),
-
-                	        dcc.Tab(label="News", value="news",
-                		        children=[],className="custom-tab", selected_className="custom-tab--selected"),
-                	        dcc.Tab(label="Financial Stats", value="financials", 
-                		        children=[], className="custom-tab", selected_className="custom-tab--selected"),
-                	        dcc.Tab(label="Similar", value="similar", 
-                		        children=[], className="custom-tab", selected_className="custom-tab--selected")], 
-                	        colors={"border":"rgba(0,0,0,0)","background":"rgba(0,0,0,0)"})
+                	        dbc.Tab(label="News", tab_id="news"),
+                	        dbc.Tab(label="Financial Stats", tab_id="financials"),
+                	        dbc.Tab(label="Similar", tab_id="similar")], 
+                	    )
                     ])
                 ]), 
-	    dcc.Tab(label="PORTFOLIO", value="PORTFOLIO",
+	    dbc.Tab(label="Portfolio",
             children=[
                 html.Hr(),
                 html.Div([html.Div([dt.DataTable(id = "add-ticker",
@@ -183,10 +174,10 @@ html.Div([
 		             className="dcc_control", style = {"marging-bottom":"0px"}),
 		    
 	            html.Div(id="backtest-results", style={"display":"none"})], 
-	        className="custom-tab", selected_className="custom-tab--selected")
+	        )
 	    ])######end tabs here                                               #3
     ]),
-], style = {"width":"100%", "padding-left":"0%", "padding-right":"0%"})
+],)
 
 
 #header conteny(Company name, sector, button and dropdown)
@@ -221,7 +212,6 @@ def collect_ticker_info(ticker):
 	company = stock_data.loc[ticker]
 	similar_stocks = new_rank_data.loc[new_rank_data["sector"]==company["sector"]].sort_values(by="rank")
 	similar_stocks.index = range(len(similar_stocks))
-	print(similar_stocks.head())
 	return [ticker_history.to_json(orient='split', date_format='iso'), str(ticker_stats)] 
 
 @app.callback(
@@ -235,53 +225,131 @@ def get_company(ticker):
 	similar_stocks = new_rank_data.loc[new_rank_data["sector"]==company["sector"]].sort_values(by="rank")
 	similar_stocks.index = range(len(similar_stocks))
 
-	similar_stocks_1 = html.Div([
-		html.Div([
-			html.H6(similar_stocks.loc[0]["name"],
-				style={"margin-bottom":"0px","color":"black"})]),
-			html.H6(similar_stocks.loc[0]["industry"], 
-				style={"margin-bottom":"0px"}),
-			html.Div(html.Button('compare',id='compare-1',n_clicks=0), style={"margin-bottom":"0px"}, className="row dcc_control")
-		], style={"margin-bottom":"0px"},className="three columns price_mini_container")
+	similar_stocks_1 = dbc.Card([
+		dbc.CardBody([
+			html.H5(similar_stocks.loc[0]["name"], className="card-title"),
+			html.P(similar_stocks.loc[0]["industry"], className="card-text")
+			]),
+		dbc.CardFooter(
+			[
+			    dbc.Button('compare',id='open-1'),
+			    dbc.Modal(
+			    	[
+			    	    dbc.ModalHeader("Compare Header"),
+			    	    dbc.ModalBody("This is modal Content for compare 1"),
+			    	    dbc.ModalFooter(
+			    	    	dbc.Button("Close", id="close-1", className="ml-auto")
+			    	    	)
+			    	    ], id="modal-1"
+			    	)
 
-	similar_stocks_2 = html.Div([
-		html.Div([
-			html.H6(similar_stocks.loc[1]["name"],
-				style={"margin-bottom":"0px","color":"black"})]),
-			html.H6(similar_stocks.loc[1]["industry"], 
-				style={"margin-bottom":"0px"}),
-			html.Div(html.Button('compare',id='compare-2', style={"background-color":"blue"}, n_clicks=0), style={"margin-bottom":"0px"}, className="row dcc_control")
-		], style={"margin-bottom":"0px"},className="three columns price_mini_container")
+			])
+		], style={"margin-right":"5px"}, className="card border-dark")
 
-	similar_stocks_3 = html.Div([
-		html.Div([
-			html.H6(similar_stocks.loc[2]["name"],
-				style={"margin-bottom":"0px","color":"black"})]),
-			html.H6(similar_stocks.loc[2]["industry"], 
-				style={"margin-bottom":"0px"}),
-			html.Div(html.Button('compare',id='compare-3',n_clicks=0), style={"margin-bottom":"0px"}, className="row dcc_control")
-		], style={"margin-bottom":"0px"},className="three columns price_mini_container")
+	similar_stocks_2 = dbc.Card([
+		dbc.CardBody([
+			html.H5(similar_stocks.loc[1]["name"], className="card-title"),
+			html.P(similar_stocks.loc[1]["industry"], className="card-text")
+			]),
+		dbc.CardFooter(
+			[
+			    dbc.Button('compare',id='open-2'),
+			    dbc.Modal(
+			    	[
+			    	    dbc.ModalHeader(ticker+" VS "+similar_stocks.loc[1]["name"]),
+			    	    dbc.ModalBody("This is modal Content for compare 2"),
+			    	    dbc.ModalFooter(
+			    	    	dbc.Button("Close", id="close-2", className="ml-auto")
+			    	    	)
+			    	    ], id="modal-2"
+			    	)
 
-	similar_stocks_4 = html.Div([
-		html.Div([
-			html.H6(similar_stocks.loc[3]["name"],
-				style={"margin-bottom":"0px","color":"black"})]),
-			html.H6(similar_stocks.loc[3]["industry"], 
-				style={"margin-bottom":"0px"}),
-			html.Div(html.Button('compare',id='compare-4',n_clicks=0), style={"margin-bottom":"0px"}, className="row dcc_control")
-		], style={"margin-bottom":"0px"},className="three columns price_mini_container")
+			])
+		], style={"margin-left":"5px", "margin-right":"5px"}, className="card border-dark")
 
-	similar_stocks_table = html.Div(children=[similar_stocks_1, 
+	similar_stocks_3 = dbc.Card([
+		dbc.CardBody([
+			html.H5(similar_stocks.loc[2]["name"], className="card-title"),
+			html.P(similar_stocks.loc[2]["industry"], className="card-text")
+			]),
+		dbc.CardFooter(
+			[
+			    dbc.Button('compare',id='open-3'),
+			    dbc.Modal(
+			    	[
+			    	    dbc.ModalHeader("Compare Header"),
+			    	    dbc.ModalBody("This is modal Content for compare 3"),
+			    	    dbc.ModalFooter(
+			    	    	dbc.Button("Close", id="close-3", className="ml-auto")
+			    	    	)
+			    	    ], id="modal-3"
+			    	)
+
+			])
+		],style={"margin-left":"5px", "margin-right":"5px"}, className="card border-dark")
+
+	similar_stocks_4 = dbc.Card([
+		dbc.CardBody([
+			html.H5(similar_stocks.loc[3]["name"], className="card-title"),
+			html.P(similar_stocks.loc[3]["industry"], className="card-text")
+			]),
+		dbc.CardFooter(
+			[
+			    dbc.Button('compare',id='open-4'),
+			    dbc.Modal(
+			    	[
+			    	    dbc.ModalHeader("Compare Header"),
+			    	    dbc.ModalBody("This is modal Content for compare 4"),
+			    	    dbc.ModalFooter(
+			    	    	dbc.Button("Close", id="close-4", className="ml-auto")
+			    	    	)
+			    	    ], id="modal-4"
+			    	)
+
+			],className="border-dark")
+		], style={"margin-left":"5px"}, className="card border-dark")
+
+	similar_stocks_table = dbc.CardDeck([similar_stocks_1, 
 		similar_stocks_2, 
 		similar_stocks_3, 
-		similar_stocks_4], className="row container-display")
-	return company["name"], sec_ind, similar_stocks_table
+		similar_stocks_4])
+	return company["name"], sec_ind, [similar_stocks_table, html.Br()]
 
 @app.callback(
-	Output("compare-output", "chidren"),
-	[Input("compare-1", "n_clicks")])
-def compare_modal(n1):
-	return
+	Output("modal-1", "is_open"),
+	[Input("open-1", "n_clicks"), Input("close-1", "n_clicks")],
+	[State("modal-1", "is_open")])
+def compare_modal(n1, n2, is_open):
+	if n1 or n2:
+		return not is_open
+	return is_open
+
+@app.callback(
+	Output("modal-2", "is_open"),
+	[Input("open-2", "n_clicks"), Input("close-2", "n_clicks")],
+	[State("modal-2", "is_open")])
+def compare_modal(n1, n2, is_open):
+	if n1 or n2:
+		return not is_open
+	return is_open
+
+@app.callback(
+	Output("modal-3", "is_open"),
+	[Input("open-3", "n_clicks"), Input("close-3", "n_clicks")],
+	[State("modal-3", "is_open")])
+def compare_modal(n1, n2, is_open):
+	if n1 or n2:
+		return not is_open
+	return is_open
+
+@app.callback(
+	Output("modal-4", "is_open"),
+	[Input("open-4", "n_clicks"), Input("close-4", "n_clicks")],
+	[State("modal-4", "is_open")])
+def compare_modal(n1, n2, is_open):
+	if n1 or n2:
+		return not is_open
+	return is_open
 
 
 #Tabs(Overview, Financials, Comapare)
@@ -289,7 +357,7 @@ def compare_modal(n1):
 @app.callback(
 	Output("price-history-figure","children"),
 	[Input("ticker-info", "children"),
-	 Input("time-tabs","value")])
+	 Input("time-tabs","active_tab")])
 def get_graph(ticker_info,tab):
 	#data = yf.Ticker(ticker)
 	#df = data.history(period="5y")["Close"]
@@ -303,10 +371,7 @@ def get_graph(ticker_info,tab):
 		index = pd.to_datetime(price_index))
 	#price_data.columns = ["open", "high", "low", "close", "volume"]
 	#price_data.index = pd.to_datetime(price_index)
-	price_data["MA_14"] = price_data["close"].rolling(10).mean()
-	price_data["STD"] = price_data["close"].rolling(10).std()
-	price_data["upper_bol"] = price_data["MA_14"] + 2*price_data["STD"]
-	price_data["lower_bol"] = price_data["MA_14"] - 2*price_data["STD"]
+	price_data["MA_14"] = price_data["close"].rolling(90).mean()
 	a_data = price_data["close"][-1:]-price_data["close"][-30]
 	c_data = price_data["close"][-1:]-price_data["close"][-260]
 	b_data = price_data["close"][-1:]-price_data["close"][-130]
@@ -316,40 +381,28 @@ def get_graph(ticker_info,tab):
 
 	if tab=="1-month-tab" and a_data.any()>0:
 		m_figure.add_trace(go.Scatter(x=price_data.index[-30:],y=price_data["close"][-30:],mode='lines',line=dict(color="green")))
-
-		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
-		return figure
+		return dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 	elif tab=="1-month-tab" and a_data.any()<0:
 		m_figure.add_trace(go.Scatter(x=price_data.index[-30:],y=price_data["close"][-30:],mode='lines',line=dict(color="red")))
-		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
-		return figure
-
+		return dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 	if tab=="6-months-tab" and b_data.any()>0:
 		m_figure.add_trace(go.Scatter(x=price_data.index[-130:],y=price_data["close"][-130:],mode='lines',line=dict(color="green")))
-		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
-		return figure
+		return dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 	elif tab=="6-months-tab" and b_data.any()<0:
 		m_figure.add_trace(go.Scatter(x=price_data.index[-130:],y=price_data["close"][-130:],mode='lines',line=dict(color="red")))
-		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
-		return figure
-	
+		return dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 	if tab=="1-year-tab" and c_data.any()>0:
 	    m_figure.add_trace(go.Scatter(x=price_data.index[-260:],y=price_data["close"][-260:],mode='lines',line=dict(color="green")))
-	    figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
-	    return figure
+	    return dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 	elif tab=="1-year-tab" and c_data.any()<0:
 		m_figure.add_trace(go.Scatter(x=price_data.index[-260:],y=price_data["close"][-260:],mode='lines',line=dict(color="red")))
-		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
-		return figure
-
+		return dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 	if tab=="5-years-tab" and d_data.any()>0:
 		m_figure.add_trace(go.Scatter(x=price_data.index,y=price_data["close"],mode='lines',line=dict(color="green")))
-		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
-		return figure
+		return dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 	elif tab=="5-years-tab" and d_data.any()<0:
 		m_figure.add_trace(go.Scatter(x=price_data.index,y=price_data["close"],mode='lines',line=dict(color="red")))
-		figure = dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
-		return figure
+		return dcc.Graph(id="price-history", figure=m_figure, config={'displayModeBar':False})
 
 @app.callback(
 	Output("previous-close", "children"),
@@ -363,9 +416,9 @@ def get_keystats_table(ticker):
 
 
 	if rmc > 0:
-		rmc_tag = html.H6("+"+str(rmc)+"("+str(np.abs(rmcp))+"%"+")"+"\U00002191", style={"margin-top":"0px","color":"green"})
+		rmc_tag = html.H6("("+str(np.abs(rmcp))+"%"+")"+"\U00002191", className="card-text",style={"margin-top":"0px","color":"green"})
 	else:
-		rmc_tag = html.H6("-"+str(rmc)+"("+str(np.abs(rmcp))+"%"+")"+"\U00002193", style={"margin-top":"0px","color":"red"})
+		rmc_tag = html.H6("("+str(np.abs(rmcp))+"%"+")"+"\U00002193", className="card-text",style={"margin-top":"0px","color":"red"})
 
 	if ticker_stats["marketCap"]>1000000 and ticker_stats["marketCap"]<1000000000:
 		market_cap_ = round(ticker_stats["marketCap"]/1000000,1)
@@ -374,64 +427,55 @@ def get_keystats_table(ticker):
 		market_cap_ = round(ticker_stats["marketCap"]/1000000000,1)
 		market_cap_ = "$"+str(market_cap_)+"B"
 
-	close_price = html.Div([
-		html.Div([
+	close_price = dbc.Card([
+		dbc.CardBody([
 		    rmc_tag,
-			html.H6("$"+str(ticker_stats['regularMarketPreviousClose']), 
-				style={"font-weight":"bold", "margin-bottom":"0px"}),
-		    ])], style={"margin-left":"0px", "margin-bottom":"0px"},className="two columns price_mini_container")
+			html.P("$"+str(ticker_stats['regularMarketPreviousClose']), className="text-info"),
+		    ], style={"padding":"0.5rem"})
+		], style={"margin-right":"5px"}, className="card border-dark")
 	
-	market_cap = html.Div([
-		html.Div([
-			html.H6("Market Cap",
-				style={"margin-top":"0px"})]),
-			html.H6(market_cap_, 
-				style={"font-weight":"bold", "margin-bottom":"0px"}),
-		], style={"margin-bottom":"0px"},className="two columns price_mini_container")
+	market_cap = dbc.Card([
+		dbc.CardBody([
+			html.P("Market Cap", className="text-info"),
+			html.H6(market_cap_, className="card-text"),
+			], style={"padding":"0.5rem"})
+		], style={"margin-left":"5px", "margin-right":"5px"}, className="card border-dark")
 
-	dividend_yield = html.Div([
-		html.Div([
-			html.H6("EPS",
-				style={"margin-top":"0px"}),
-			html.H6(str(round(ticker_stats["epsForward"],3)), 
-				style={"font-weight":"bold", "margin-bottom":"0px"}),
-			])
-		],style={"margin-bottom":"0px"}, className="two columns price_mini_container")
+	dividend_yield = dbc.Card([
+		dbc.CardBody([
+			html.P("EPS", className="text-info"),
+			html.H6(str(round(ticker_stats["epsForward"],3)), className="card-text"),
+			], style={"padding":"0.5rem"})
+		], style={"margin-left":"5px", "margin-right":"5px"}, className="card border-dark")
 
-	price_earning = html.Div([
-		html.Div([
-			html.H6("PE", 
-				style={"margin-top":"0px"}),
-			html.H6(round(ticker_stats["forwardPE"],3), 
-				style={"font-weight":"bold", "margin-bottom":"0px"}),
-			])
-		],style={"margin-bottom":"0px"}, className="two columns price_mini_container")
+	price_earning = dbc.Card([
+		dbc.CardBody([
+			html.P("PE", className="text-info"),
+			html.H6(round(ticker_stats["forwardPE"],3), className="card-text"),
+			], style={"padding":"0.5rem"})
+		], style={"margin-left":"5px", "margin-right":"5px"}, className="card border-dark")
 
-	moving_average = html.Div([
-		html.Div([
-			html.H6("90Day MA", 
-				style={"margin-top":"0px"}),
-			html.H6(ma_, 
-				style={"font-weight":"bold", "margin-bottom":"0px"}),
-			])
-		],style={"margin-bottom":"0px"}, className="two columns price_mini_container")
+	moving_average = dbc.Card([
+		dbc.CardBody([
+			html.P("90Day MA", className="text-info"),
+			html.H6(ma_, className="card-text"),
+			], style={"padding":"0.5rem"})
+		], style={"margin-left":"5px", "margin-right":"5px"}, className="card border-dark")
 
-	streng_index = html.Div([
-		html.Div([
-			html.H6("RSI",
-				style={"margin-top":"0px"}),
-			html.H6(rsi_, 
-				style={"font-weight":"bold", "margin-bottom":"0px"}),
-			])
-		],style={"margin-bottom":"0px"}, className="two columns price_mini_container")
+	streng_index = dbc.Card([
+		dbc.CardBody([
+			html.P("RSI", className="text-info"),
+			html.H6(rsi_, className="card-text"),
+			], style={"padding":"0.5rem"})
+		], style={"margin-left":"5px"}, className="card border-dark")
 
-	return html.Div([
+	return dbc.CardDeck([
 		close_price, 
 		market_cap, 
 		dividend_yield, 
 		price_earning,
 		moving_average,
-		streng_index],className="row container-display")
+		streng_index])
 
 
 @app.callback(
@@ -469,56 +513,6 @@ def add_row(n_clicks, new_ticker, tickers_list):
 	[Input("ticker-names-dropdown", "value")])
 def reset_nclicks(tickers_list):
 	return 0
-"""
-@app.callback([
-	Output("market-cap","children"),
-	Output("trailing-annual-dy","children"),
-	Output("trailing-pe","children"),
-	Output("forward-pe","children")],
-	[Input("ticker-info","children"),])
-def company_stats(ticker): 
-	data = eval(ticker[1])
-
-	if data["marketCap"]>1000000 and data["marketCap"]<1000000000:
-		market_cap = round(data["marketCap"]/1000000,1)
-		market_cap = "$"+str(market_cap)+"M"
-	elif data["marketCap"]>1000000000 and data["marketCap"]<1000000000000:
-		market_cap = round(data["marketCap"]/1000000000,1)
-		market_cap = "$"+str(market_cap)+"B"
-
-
-
-	print(data["marketCap"])
-	company_ = html.Div([
-		html.Div([html.H6(data["marketCap"]), html.P("Market Cap")],className="column mini_container"),
-        html.Div([html.H6(data["trailingAnnualDividendYield"]), html.P("Dividend Yield")],className="column mini_container"),
-        html.Div([html.H6(data["trailingPE"]), html.P("Price Earnings")],className="column mini_container"),
-        html.Div([html.H6(data["forwardPE"]), html.P("forwardPE")],className="column mini_container"),
-        ],className="row")
-
-	keys1 = ("regularMarketOpen","regularMarketDayHigh","regularMarketDayLow","marketCap")
-	keys2 = ("forwardPE","sharesOutstanding","fiftyTwoWeekHigh","fiftyTwoWeekLow")
-	d1 = {k:data[k] for k in set(data).intersection(keys1)}
-	d2 = {k:data[k] for k in set(data).intersection(keys2)}
-	df1 = pd.DataFrame(list(d1.items()))
-	df1.columns = ["key1", "value1"]
-	df2 = pd.DataFrame(list(d2.items()))
-	df2.columns = ["key2", "value2"]
-	df_joint = pd.concat([df1,df2], axis=1)
-	
-	stats_table = html.Div([
-		    html.Div([dt.DataTable(columns = [{"id":c ,"name":""} for c in df_joint.columns],
-		        data=df_joint.to_dict("rows"),
-		        style_cell={"minWidth":"75px", 
-		        "textAlign":"left",
-		        'boxShadow': "0 0",
-		        "backgroundColor":"rgba(0,0,0,0)",
-		        "border":"0px 0px 0px 0px"},
-		        style_header={"border":"rgba(0,0,0,0)"},style_data={"border":"rgba(0,0,0,0)"})
-		    ])
-		    ])	    
-	return html.P("maintainance")"""
-
 
 
 @app.callback(Output("run-backtest", "n_clicks"), 
@@ -548,85 +542,6 @@ def backtest_results(n_clicks, tickers_list):
 		return json.dumps(data_sets)
 	else:
 		raise PreventUpdate
-"""
-@app.callback([
-	 Output("boxplots", "children"),
-	 Output("returns-heatmap", "children"),
-	 Output("rolling-vol", "children"),
-	 Output("rolling-sharpe", "children")],
-	[Input("run-backtest", "n_clicks"),
-	 Input("backtest-results", "children")])
-def returns(n_clicks, backtest_results_df):
-	if n_clicks == 0:
-		raise PreventUpdate
-	if n_clicks == 1:
-	    data = json.loads(backtest_results_df)
-	    returns = eval(data["returns"])
-	    returns = pd.DataFrame(returns)
-	    returns.index = pd.to_datetime(returns["index"])
-	    returns = returns.drop(["index","name"], axis=1)
-
-	    layout_figure = copy.deepcopy(layout)
-        
-        #monthly returns heatmap
-	    monthly_ret_table = ep.aggregate_returns(returns["data"], 'monthly')
-	    monthly_ret_table = monthly_ret_table.unstack().round(3)
-	    returns_heatmap = go.Figure(data=go.Heatmap(z=100*monthly_ret_table.fillna(0).values, 
-	    	x=monthly_ret_table.columns,
-	    	y=monthly_ret_table.index, 
-	    	colorscale='rdylgn'), layout=go_layout)
-	    returns_heatmap = html.Div(dcc.Graph(id="returns-heatmap", 
-	    	figure=returns_heatmap, 
-	    	config={'displayModeBar':False}), className="pretty_container")
-	    
-	    #monthly returns distribution
-	    returns_monthly_dist = go.Figure(
-	    	data=[go.Histogram(x=100*monthly_ret_table.fillna(0).values)],
-	    	layout=go_layout)
-	    returns_monthly_dist_figure = dcc.Graph(id="returns-monthly-dist", 
-	    	figure=returns_monthly_dist, 
-	    	config={'displayModeBar':False})
-
-	    ann_ret_df = pd.DataFrame(ep.aggregate_returns(returns["data"], 'yearly'))
-
-	    #rolling volatility plot
-	    rolling_vol = pf.timeseries.rolling_volatility(returns["data"], 30)
-	    rolling_vol_figure =go.Figure(layout=go_layout)
-	    rolling_vol_figure.add_trace(go.Scatter(
-	    	x=returns.index,
-	    	y=rolling_vol,
-	    	line=dict(width=2.5, color='rgb(143, 7, 138)')))
-	    rolling_vol_graph = dcc.Graph(id="rolling-vol",
-	    	figure=rolling_vol_figure,
-	    	config={'displayModeBar':False})
-
-	    #rolling sharpe ratio
-	    rolling_sharpe = pf.timeseries.rolling_sharpe(returns["data"], 30)
-	    rolling_sharpe_figure = go.Figure(layout=go_layout)
-	    rolling_sharpe_figure.add_trace(go.Scatter(
-	    	x=returns.index,
-	    	y=rolling_sharpe,
-	    	line=dict(width=2.5, color='rgb(31, 3, 171)')))
-	    rolling_sharpe_graph = dcc.Graph(id="rolling-sharpe",
-	    	figure=rolling_sharpe_figure,
-	    	config={'displayModeBar':False})
-
-	    #returns boxplots
-	    daily_box = returns["data"]
-	    weekly_box = ep.aggregate_returns(returns["data"], "weekly")
-	    monthly_box = ep.aggregate_returns(returns["data"], "monthly")
-	    box_figure = go.Figure(layout=go_layout)
-	    box_figure.add_trace(go.Box(y=daily_box, name="daily"))
-	    box_figure.add_trace(go.Box(y=weekly_box, name="weekly"))
-	    box_figure.add_trace(go.Box(y=monthly_box, name="monthly"))
-	    boxplots_graph = dcc.Graph(id="boxplots",
-	    	figure=box_figure,
-	    	config={'displayModeBar':False})
-
-	return [boxplots_graph,
-	        returns_heatmap, 
-	        rolling_vol_graph,
-	        rolling_sharpe_graph]"""
 
 @app.callback(
 	Output("positions", "children"),
