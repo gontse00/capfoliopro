@@ -40,7 +40,7 @@ multipledispatch==0.6.0
 multitasking==0.0.9
 networkx==1.11
 numexpr==2.7.0
-numpy==1.17.3
+numpy==1.22.0
 pandas==0.22.0
 pandas-datareader==0.8.1
 parso==0.5.1
