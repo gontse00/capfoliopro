@@ -28,7 +28,7 @@ ipython-genutils==0.2.0
 itsdangerous==1.1.0
 jedi==0.15.1
 Jinja2==2.10.3
-joblib==0.14.0
+joblib==1.2.0
 kiwisolver==1.1.0
 Logbook==1.5.3
 lru-dict==1.1.6
